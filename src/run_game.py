@@ -7,7 +7,10 @@ import settings
 
 settings = settings.settings_load()
 
+# INIT DATA
 SET_TITLE = settings['GAME']['TITLE']
+DEFAULT_BG = arcade.color.WHITE
+DEFAULT_FONT = arcade.color.BLACK
 if int(settings['VIDEO']['FULL_RESOLUTION']) == 1:
     SET_FULL = True
     SET_WIDTH = int(settings['DEFAULTS']['WINDOW_WIDTH'])
@@ -22,14 +25,14 @@ UI_SCALING = float(settings['VIDEO']['UI_SCALING'])
 
 class IntroView(arcade.View):
     def on_show(self):
-        arcade.set_background_color(arcade.color.WHITE)
+        arcade.set_background_color(DEFAULT_BG)
 
     def on_draw(self):
         arcade.start_render()
         arcade.draw_text("Intro Screen", self.window.width/2, self.window.height/2,
-                         arcade.color.BLACK, font_size=50, anchor_x="center")
+                         DEFAULT_FONT, font_size=50, anchor_x="center")
         arcade.draw_text("Yo click",  self.window.width/2, self.window.height/2-75,
-                         arcade.color.GRAY, font_size=20, anchor_x="center")
+                         DEFAULT_FONT, font_size=20, anchor_x="center")
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
         menu_view = MenuView()
@@ -38,14 +41,14 @@ class IntroView(arcade.View):
 
 class MenuView(arcade.View):
     def on_show(self):
-        arcade.set_background_color(arcade.color.WHITE)
+        arcade.set_background_color(DEFAULT_BG)
 
     def on_draw(self):
         arcade.start_render()
         arcade.draw_text("Menu Screen",  self.window.width/2, self.window.height/2,
-                         arcade.color.BLACK, font_size=50, anchor_x="center")
+                         DEFAULT_FONT, font_size=50, anchor_x="center")
         arcade.draw_text("Once again!",  self.window.width/2, self.window.height/2-75,
-                         arcade.color.GRAY, font_size=20, anchor_x="center")
+                         DEFAULT_FONT, font_size=20, anchor_x="center")
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
         instructions_view = InstructionView()
@@ -54,14 +57,14 @@ class MenuView(arcade.View):
 
 class InstructionView(arcade.View):
     def on_show(self):
-        arcade.set_background_color(arcade.color.ORANGE_PEEL)
+        arcade.set_background_color(DEFAULT_BG)
 
     def on_draw(self):
         arcade.start_render()
         arcade.draw_text("Instructions Screen",  self.window.width/2, self.window.height/2,
-                         arcade.color.BLACK, font_size=50, anchor_x="center")
+                         DEFAULT_FONT, font_size=50, anchor_x="center")
         arcade.draw_text("I dare you!",  self.window.width/2, self.window.height/2-75,
-                         arcade.color.GRAY, font_size=20, anchor_x="center")
+                         DEFAULT_FONT, font_size=20, anchor_x="center")
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
         game_view = GameView()
@@ -81,7 +84,7 @@ class GameView(arcade.View):
         self.score = 0
 
     def on_show(self):
-        arcade.set_background_color(arcade.color.AMAZON)
+        arcade.set_background_color(DEFAULT_BG)
 
         # Don't show the mouse cursor
         self.window.set_mouse_visible(False)
@@ -93,9 +96,9 @@ class GameView(arcade.View):
 
         # Put the text on the screen.
         output = f"Score: {self.score}"
-        arcade.draw_text(output, 10, 30, arcade.color.WHITE, 14)
+        arcade.draw_text(output, 10, 30, DEFAULT_FONT, 14)
         output_total = f"Total Score: {self.window.total_score}"
-        arcade.draw_text(output_total, 10, 10, arcade.color.WHITE, 14)
+        arcade.draw_text(output_total, 10, 10, DEFAULT_FONT, 14)
 
     def on_update(self, delta_time):
         self.time_taken += delta_time
@@ -110,6 +113,51 @@ class GameView(arcade.View):
         """
         self.cursor.get_position(x, y)
 
+    def on_key_press(self, key, _modifiers):
+        if key == arcade.key.ESCAPE:
+            # pass self, the current view, to preserve this view's state
+            pause = PauseView(self)
+            self.window.show_view(pause)
+
+
+class PauseView(arcade.View):
+    def __init__(self, game_view):
+        super().__init__()
+        self.game_view = game_view
+
+    def on_show(self):
+        arcade.set_background_color(DEFAULT_BG)
+
+    def on_draw(self):
+        arcade.start_render()
+
+        # Draw player, for effect, on pause screen.
+        # The previous View (GameView) was passed in
+        # and saved in self.game_view.
+        arcade.draw_text("PAUSED", self.window.width/2, self.window.height/2+50,
+                         DEFAULT_FONT, font_size=50, anchor_x="center")
+
+        # Show tip to return or reset
+        arcade.draw_text("Press Esc. to return",
+                         self.window.width/2,
+                         self.window.height/2,
+                         DEFAULT_FONT,
+                         font_size=20,
+                         anchor_x="center")
+        arcade.draw_text("Press Enter to reset",
+                         self.window.width / 2,
+                         self.window.height / 2 - 30,
+                         DEFAULT_FONT,
+                         font_size=20,
+                         anchor_x="center")
+
+    def on_key_press(self, key, _modifiers):
+        if key == arcade.key.ESCAPE:   # resume game
+            self.window.show_view(self.game_view)
+        elif key == arcade.key.ENTER:  # reset game
+            game = GameView()
+            self.window.show_view(game)
+
 
 class GameOverView(arcade.View):
     def __init__(self):
@@ -117,19 +165,19 @@ class GameOverView(arcade.View):
         self.time_taken = 0
 
     def on_show(self):
-        arcade.set_background_color(arcade.color.BLACK)
+        arcade.set_background_color(DEFAULT_FONT)
 
     def on_draw(self):
         arcade.start_render()
 
-        arcade.draw_text("Game Over", 240, 400, arcade.color.WHITE, 54)
-        arcade.draw_text("Click to restart", 310, 300, arcade.color.WHITE, 24)
+        arcade.draw_text("Game Over", 240, 400, DEFAULT_FONT, 54)
+        arcade.draw_text("Click to restart", 310, 300, DEFAULT_FONT, 24)
 
         time_taken_formatted = f"{round(self.time_taken, 2)} seconds"
         arcade.draw_text(f"Time taken: {time_taken_formatted}",
                          self.window.width / 2,
                          200,
-                         arcade.color.GRAY,
+                         DEFAULT_FONT,
                          font_size=15,
                          anchor_x="center")
 
