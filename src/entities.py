@@ -17,8 +17,6 @@ class Cursor(Entity):
         self.hover = assets.player_cursor_hover
         self.select = assets.player_cursor_select
         self.append(self.idle)
-        self.append(self.hover)
-        self.append(self.select)
 
     def get_position(self, dx, dy):
         for sprite in self:
