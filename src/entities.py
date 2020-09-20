@@ -6,6 +6,10 @@ import time
 # Textures
 intro_team = assets.intro_authors
 
+# Music
+music_list = [assets.track01,
+              assets.track02]
+
 
 class Entity(arcade.SpriteList):
     def __init__(self):
@@ -31,10 +35,10 @@ class Cursor(Entity):
 
 class MusicManager:
     def __init__(self, init_volume=0.8):
+        self.volume = float(init_volume)
         self.music_list = []
         self.current_song = 0
         self.music = None
-        self.volume = init_volume
 
     def advance_song(self):
         """ Advance our pointer to the next song. This does NOT start the song. """
@@ -53,7 +57,9 @@ class MusicManager:
         print(f"Playing {self.music_list[self.current_song]}")
         self.music = arcade.Sound(self.music_list[self.current_song], streaming=True)
         self.music.play(self.volume)
-        # Delay
+        # This is a quick delay. If we don't do this, our elapsed time is 0.0
+        # and on_update will think the music is over and advance us to the next
+        # song before starting this one.
         time.sleep(0.03)
 
     def setup(self):
@@ -66,9 +72,8 @@ class MusicManager:
         # Play the song
         self.play_song()
 
-    def on_draw(self, viewport_width, viewport_height):
-        """ Render the player. """
-
+    def on_draw(self, screen_height):
+        """ Render the screen. """
         position = self.music.get_stream_position()
         length = self.music.get_length()
 
@@ -76,7 +81,7 @@ class MusicManager:
         margin = size * .5
 
         # Print time elapsed and total
-        y = viewport_height - (size + margin)
+        y = screen_height - (size + margin)
         text = f"{int(position) // 60}:{int(position) % 60:02} of {int(length) // 60}:{int(length) % 60:02}"
         arcade.draw_text(text, 0, y, arcade.csscolor.BLACK, size)
 

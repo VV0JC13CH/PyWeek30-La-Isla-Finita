@@ -4,6 +4,7 @@ import timeit
 
 import entities
 import settings
+import sandbox
 
 settings = settings.settings_load()
 
@@ -235,7 +236,7 @@ class GameOverView(arcade.View):
         self.window.show_view(game_view)
 
 
-class MyGame(arcade.Window):
+class Island(arcade.Window):
     def __init__(self):
         super().__init__(width=SET_WIDTH, height=SET_HEIGHT, title=SET_TITLE, fullscreen=SET_FULL)
         file_path = os.path.dirname(os.path.abspath(__file__))
@@ -244,6 +245,15 @@ class MyGame(arcade.Window):
         # Start viewport
         self.start_view = IntroView()
         self.show_view(self.start_view)
+
+        # Start Resources Managers
+        self.music_mng = entities.MusicManager(SET_MUSIC_VOLUME)
+
+    def setup(self):
+        self.music_mng.setup()
+
+    def on_update(self, delta_time: float):
+        self.music_mng.on_update(delta_time)
 
     def update_resolution(self):
         width, height = self.get_size()
@@ -271,7 +281,8 @@ class MyGame(arcade.Window):
 
 
 def main():
-    MyGame()
+    game = Island()
+    game.setup()
     arcade.run()
 
 
