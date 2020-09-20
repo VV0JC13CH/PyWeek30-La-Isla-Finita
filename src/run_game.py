@@ -8,6 +8,7 @@ import settings
 settings = settings.settings_load()
 
 # INIT DATA
+SCENES = ['INTRO', 'MAIN', 'OPTIONS', 'PAUSE', 'GAME_OVER', 'VICTORY', 'INTRODUCTION', 'LOAD', 'SCORES']
 SET_TITLE = settings['GAME']['TITLE']
 DEFAULT_BG = arcade.color.WHITE
 DEFAULT_FONT = arcade.color.BLACK
@@ -23,6 +24,16 @@ else:
     SET_WIDTH = int(settings['VIDEO']['WINDOW_WIDTH'])
     SET_HEIGHT = int(settings['VIDEO']['WINDOW_HEIGHT'])
     UI_SCALING = float(settings['VIDEO']['UI_SCALING'])
+# DEVELOPER MODE
+if int(settings['DEFAULTS']['SKIP_INTRO']) == 1:
+    SET_SKIP_INTRO = 1
+    CURRENT_SCENE = SCENES[1]
+else:
+    SET_SKIP_INTRO = 0
+    CURRENT_SCENE = SCENES[0]
+
+
+SET_DEVELOPER = int(settings['DEFAULTS']['DEVELOPER_MODE'])
 
 
 class IntroView(arcade.View):
@@ -60,8 +71,13 @@ class IntroView(arcade.View):
 
 
 class MenuView(arcade.View):
+    def __init__(self):
+        super().__init__()
+        self.main_menu_mng = entities.UiManager(SET_WIDTH, SET_HEIGHT)
+
     def on_show(self):
         arcade.set_background_color(DEFAULT_BG)
+        self.main_menu_mng.on_show_view_main()
 
     def on_draw(self):
         arcade.start_render()
@@ -242,7 +258,11 @@ class Island(arcade.Window):
         os.chdir(file_path)
 
         # Start viewport
-        self.start_view = IntroView()
+        if SET_SKIP_INTRO == 1:
+            self.start_view = MenuView()
+        if SET_SKIP_INTRO == 0:
+            self.start_view = IntroView()
+
         self.show_view(self.start_view)
 
         # Start Resources Managers
