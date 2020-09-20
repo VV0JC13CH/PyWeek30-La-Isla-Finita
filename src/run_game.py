@@ -1,6 +1,8 @@
 import arcade
 import random
 import os
+import timeit
+
 
 import entities
 import settings
@@ -80,8 +82,12 @@ class GameView(arcade.View):
         # Entities (lists of sprites)
         self.cursor = entities.Cursor()
 
-        # Set up the player
-        self.score = 0
+        # Developer mode
+        self.processing_time = 0
+        self.draw_time = 0
+        self.frame_count = 0
+        self.fps_start_timer = None
+        self.fps = None
 
     def on_show(self):
         arcade.set_background_color(DEFAULT_BG)
@@ -90,15 +96,40 @@ class GameView(arcade.View):
         self.window.set_mouse_visible(False)
 
     def on_draw(self):
+        # Start timing how long this takes
+        draw_start_time = timeit.default_timer()
+
+        if self.frame_count % 60 == 0:
+            if self.fps_start_timer is not None:
+                total_time = timeit.default_timer() - self.fps_start_timer
+                self.fps = 60 / total_time
+            self.fps_start_timer = timeit.default_timer()
+        self.frame_count += 1
         arcade.start_render()
+        # Display timings
+        output = f"Processing time: {self.processing_time:.3f}"
+        arcade.draw_text(output, 20, self.window.height - 20, arcade.color.BLACK, 16)
+
+        output = f"Drawing time: {self.draw_time:.3f}"
+        arcade.draw_text(output, 20, self.window.height - 40, arcade.color.BLACK, 16)
+
+        # Calculate time
+        minutes = int(self.time_taken) // 60
+        seconds = int(self.time_taken) % 60
+        time_output = f"Time: {minutes:02d}:{seconds:02d}"
+
+        # Output the timer text.
+        arcade.draw_text(time_output, 20, self.window.height - 60, arcade.color.BLACK, 16)
+
+        if self.fps is not None:
+            output = f"FPS: {self.fps:.0f}"
+            arcade.draw_text(output, 20, self.window.height - 80, arcade.color.BLACK, 16)
+
         # Draw all the sprites.
         self.cursor.draw()
 
-        # Put the text on the screen.
-        output = f"Score: {self.score}"
-        arcade.draw_text(output, 10, 30, DEFAULT_FONT, 14)
-        output_total = f"Total Score: {self.window.total_score}"
-        arcade.draw_text(output_total, 10, 10, DEFAULT_FONT, 14)
+        # Below code has to be at the end of rendering
+        self.draw_time = timeit.default_timer() - draw_start_time
 
     def on_update(self, delta_time):
         self.time_taken += delta_time
@@ -191,7 +222,8 @@ class MyGame(arcade.Window):
         super().__init__(width=SET_WIDTH, height=SET_HEIGHT, title=SET_TITLE, fullscreen=SET_FULL)
         file_path = os.path.dirname(os.path.abspath(__file__))
         os.chdir(file_path)
-        self.total_score = 0
+
+        # Start viewport
         self.start_view = IntroView()
         self.show_view(self.start_view)
 
