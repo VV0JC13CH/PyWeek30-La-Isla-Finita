@@ -8,12 +8,14 @@ import settings
 settings = settings.settings_load()
 
 SET_TITLE = settings['GAME']['TITLE']
-SET_WIDTH = int(settings['VIDEO']['WIDTH'])
-SET_HEIGHT = int(settings['VIDEO']['HEIGHT'])
-if int(settings['VIDEO']['FULLSCREEN']) == 1:
+if int(settings['VIDEO']['FULL_RESOLUTION']) == 1:
     SET_FULL = True
+    SET_WIDTH = int(settings['DEFAULTS']['WINDOW_WIDTH'])
+    SET_HEIGHT = int(settings['DEFAULTS']['WINDOW_HEIGHT'])
 else:
     SET_FULL = False
+    SET_WIDTH = int(settings['VIDEO']['WINDOW_WIDTH'])
+    SET_HEIGHT = int(settings['VIDEO']['WINDOW_HEIGHT'])
 
 UI_SCALING = float(settings['VIDEO']['UI_SCALING'])
 
@@ -24,9 +26,9 @@ class IntroView(arcade.View):
 
     def on_draw(self):
         arcade.start_render()
-        arcade.draw_text("Intro Screen", SET_WIDTH/2, SET_HEIGHT/2,
+        arcade.draw_text("Intro Screen", self.window.width/2, self.window.height/2,
                          arcade.color.BLACK, font_size=50, anchor_x="center")
-        arcade.draw_text("Yo click", SET_WIDTH/2, SET_HEIGHT/2-75,
+        arcade.draw_text("Yo click",  self.window.width/2, self.window.height/2-75,
                          arcade.color.GRAY, font_size=20, anchor_x="center")
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
@@ -40,9 +42,9 @@ class MenuView(arcade.View):
 
     def on_draw(self):
         arcade.start_render()
-        arcade.draw_text("Menu Screen", SET_WIDTH/2, SET_HEIGHT/2,
+        arcade.draw_text("Menu Screen",  self.window.width/2, self.window.height/2,
                          arcade.color.BLACK, font_size=50, anchor_x="center")
-        arcade.draw_text("Once again!", SET_WIDTH/2, SET_HEIGHT/2-75,
+        arcade.draw_text("Once again!",  self.window.width/2, self.window.height/2-75,
                          arcade.color.GRAY, font_size=20, anchor_x="center")
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
@@ -56,9 +58,9 @@ class InstructionView(arcade.View):
 
     def on_draw(self):
         arcade.start_render()
-        arcade.draw_text("Instructions Screen", SET_WIDTH/2, SET_HEIGHT/2,
+        arcade.draw_text("Instructions Screen",  self.window.width/2, self.window.height/2,
                          arcade.color.BLACK, font_size=50, anchor_x="center")
-        arcade.draw_text("I dare you!", SET_WIDTH/2, SET_HEIGHT/2-75,
+        arcade.draw_text("I dare you!",  self.window.width/2, self.window.height/2-75,
                          arcade.color.GRAY, font_size=20, anchor_x="center")
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
@@ -125,7 +127,7 @@ class GameOverView(arcade.View):
 
         time_taken_formatted = f"{round(self.time_taken, 2)} seconds"
         arcade.draw_text(f"Time taken: {time_taken_formatted}",
-                         WIDTH/2,
+                         self.window.width / 2,
                          200,
                          arcade.color.GRAY,
                          font_size=15,
