@@ -5,14 +5,17 @@ import os
 import entities
 import settings
 
-
-file_path = os.path.dirname(os.path.abspath(__file__))
-os.chdir(file_path)
 settings = settings.settings_load()
 
-WIDTH = int(settings['VIDEO']['WIDTH'])
-HEIGHT = int(settings['VIDEO']['HEIGHT'])
-SPRITE_SCALING = float(settings['VIDEO']['SPRITE_SCALING'])
+SET_TITLE = settings['GAME']['TITLE']
+SET_WIDTH = int(settings['VIDEO']['WIDTH'])
+SET_HEIGHT = int(settings['VIDEO']['HEIGHT'])
+if int(settings['VIDEO']['FULLSCREEN']) == 1:
+    SET_FULL = True
+else:
+    SET_FULL = False
+
+UI_SCALING = float(settings['VIDEO']['UI_SCALING'])
 
 
 class IntroView(arcade.View):
@@ -21,9 +24,9 @@ class IntroView(arcade.View):
 
     def on_draw(self):
         arcade.start_render()
-        arcade.draw_text("Intro Screen", WIDTH/2, HEIGHT/2,
+        arcade.draw_text("Intro Screen", SET_WIDTH/2, SET_HEIGHT/2,
                          arcade.color.BLACK, font_size=50, anchor_x="center")
-        arcade.draw_text("Click to advance", WIDTH/2, HEIGHT/2-75,
+        arcade.draw_text("Yo click", SET_WIDTH/2, SET_HEIGHT/2-75,
                          arcade.color.GRAY, font_size=20, anchor_x="center")
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
@@ -37,9 +40,9 @@ class MenuView(arcade.View):
 
     def on_draw(self):
         arcade.start_render()
-        arcade.draw_text("Menu Screen", WIDTH/2, HEIGHT/2,
+        arcade.draw_text("Menu Screen", SET_WIDTH/2, SET_HEIGHT/2,
                          arcade.color.BLACK, font_size=50, anchor_x="center")
-        arcade.draw_text("Click to advance", WIDTH/2, HEIGHT/2-75,
+        arcade.draw_text("Once again!", SET_WIDTH/2, SET_HEIGHT/2-75,
                          arcade.color.GRAY, font_size=20, anchor_x="center")
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
@@ -53,9 +56,9 @@ class InstructionView(arcade.View):
 
     def on_draw(self):
         arcade.start_render()
-        arcade.draw_text("Instructions Screen", WIDTH/2, HEIGHT/2,
+        arcade.draw_text("Instructions Screen", SET_WIDTH/2, SET_HEIGHT/2,
                          arcade.color.BLACK, font_size=50, anchor_x="center")
-        arcade.draw_text("Click to advance", WIDTH/2, HEIGHT/2-75,
+        arcade.draw_text("I dare you!", SET_WIDTH/2, SET_HEIGHT/2-75,
                          arcade.color.GRAY, font_size=20, anchor_x="center")
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
@@ -99,7 +102,6 @@ class GameView(arcade.View):
         # example though.)
         self.cursor.update()
 
-
     def on_mouse_motion(self, x, y, _dx, _dy):
         """
         Called whenever the mouse moves.
@@ -134,11 +136,42 @@ class GameOverView(arcade.View):
         self.window.show_view(game_view)
 
 
+class MyGame(arcade.Window):
+    def __init__(self):
+        super().__init__(width=SET_WIDTH, height=SET_HEIGHT, title=SET_TITLE, fullscreen=SET_FULL)
+        file_path = os.path.dirname(os.path.abspath(__file__))
+        os.chdir(file_path)
+        self.total_score = 0
+        self.start_view = IntroView()
+        self.show_view(self.start_view)
+
+    def update_resolution(self):
+        width, height = self.get_size()
+        self.set_viewport(0, width, 0, height)
+
+    def on_key_press(self, key, modifiers):
+        """Called whenever a key is pressed. """
+        if key == arcade.key.F:
+            # User hits f. Flip between full and not full screen.
+            self.set_fullscreen(not self.fullscreen)
+
+            # Get the window coordinates. Match viewport to window coordinates
+            # so there is a one-to-one mapping.
+            width, height = self.get_size()
+            self.set_viewport(0, width, 0, height)
+
+        if key == arcade.key.S:
+            # User hits s. Flip between full and not full screen.
+            self.set_fullscreen(not self.fullscreen)
+
+            # Instead of a one-to-one mapping, stretch/squash window to match the
+            # constants. This does NOT respect aspect ratio. You'd need to
+            # do a bit of math for that.
+            self.set_viewport(0, SET_WIDTH, 0, SET_HEIGHT)
+
+
 def main():
-    window = arcade.Window(WIDTH, HEIGHT, "La Isla Finita")
-    window.total_score = 0
-    intro_view = IntroView()
-    window.show_view(intro_view)
+    MyGame()
     arcade.run()
 
 
