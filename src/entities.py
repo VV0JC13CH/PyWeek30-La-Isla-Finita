@@ -76,19 +76,8 @@ class MusicManager:
         """ Render the screen. """
         position = self.music.get_stream_position()
         length = self.music.get_length()
-
-        size = 20
-        margin = size * .5
-
-        # Print time elapsed and total
-        y = screen_height - (size + margin)
-        text = f"{int(position) // 60}:{int(position) % 60:02} of {int(length) // 60}:{int(length) % 60:02}"
-        arcade.draw_text(text, 0, y, arcade.csscolor.BLACK, size)
-
-        # Print current song
-        y -= size + margin
-        text = f"Currently playing: {self.music_list[self.current_song]}"
-        arcade.draw_text(text, 0, y, arcade.csscolor.BLACK, size)
+        text_position = f"{int(position) // 60}:{int(position) % 60:02} of {int(length) // 60}:{int(length) % 60:02}"
+        text_song = f"Currently playing: {self.music_list[self.current_song]}"
 
     def on_update(self, dt):
 
