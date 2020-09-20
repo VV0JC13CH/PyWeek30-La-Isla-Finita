@@ -4,7 +4,6 @@ import timeit
 
 import entities
 import settings
-import sandbox
 
 settings = settings.settings_load()
 
@@ -282,6 +281,7 @@ class Island(arcade.Window):
 
 def main():
     game = Island()
+    # Initial all global managers:
     game.setup()
     arcade.run()
 
