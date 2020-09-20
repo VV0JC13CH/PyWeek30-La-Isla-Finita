@@ -1,8 +1,11 @@
 import arcade
 import assets
+# time for sounds purposes:
+import time
 
 # Textures
 intro_team = assets.intro_authors
+
 
 class Entity(arcade.SpriteList):
     def __init__(self):
@@ -24,3 +27,71 @@ class Cursor(Entity):
         for sprite in self:
             sprite.center_x = dx
             sprite.center_y = dy
+
+
+class MusicManager:
+    def __init__(self, init_volume=0.8):
+        self.music_list = []
+        self.current_song = 0
+        self.music = None
+        self.volume = init_volume
+
+    def advance_song(self):
+        """ Advance our pointer to the next song. This does NOT start the song. """
+        self.current_song += 1
+        if self.current_song >= len(self.music_list):
+            self.current_song = 0
+        print(f"Advancing song to {self.current_song}.")
+
+    def play_song(self):
+        """ Play the song. """
+        # Stop what is currently playing.
+        if self.music:
+            self.music.stop()
+
+        # Play the next song
+        print(f"Playing {self.music_list[self.current_song]}")
+        self.music = arcade.Sound(self.music_list[self.current_song], streaming=True)
+        self.music.play(self.volume)
+        # Delay
+        time.sleep(0.03)
+
+    def setup(self):
+        """ Set up the game here. Call this function to restart the game. """
+
+        # List of music
+        self.music_list = assets.songs_list
+        # Array index of what to play
+        self.current_song = 0
+        # Play the song
+        self.play_song()
+
+    def on_draw(self, viewport_width, viewport_height):
+        """ Render the player. """
+
+        position = self.music.get_stream_position()
+        length = self.music.get_length()
+
+        size = 20
+        margin = size * .5
+
+        # Print time elapsed and total
+        y = viewport_height - (size + margin)
+        text = f"{int(position) // 60}:{int(position) % 60:02} of {int(length) // 60}:{int(length) % 60:02}"
+        arcade.draw_text(text, 0, y, arcade.csscolor.BLACK, size)
+
+        # Print current song
+        y -= size + margin
+        text = f"Currently playing: {self.music_list[self.current_song]}"
+        arcade.draw_text(text, 0, y, arcade.csscolor.BLACK, size)
+
+    def on_update(self, dt):
+
+        position = self.music.get_stream_position()
+
+        # The position pointer is reset to 0 right after we finish the song.
+        # This makes it very difficult to figure out if we just started playing
+        # or if we are doing playing.
+        if position == 0.0:
+            self.advance_song()
+            self.play_song()

@@ -11,6 +11,8 @@ settings = settings.settings_load()
 SET_TITLE = settings['GAME']['TITLE']
 DEFAULT_BG = arcade.color.WHITE
 DEFAULT_FONT = arcade.color.BLACK
+SET_MUSIC_VOLUME = settings['AUDIO']['MUSIC_VOL']
+SET_SOUND_VOLUME = settings['AUDIO']['SOUND_VOL']
 if int(settings['VIDEO']['FULL_RESOLUTION']) == 1:
     SET_FULL = True
     SET_WIDTH = int(settings['DEFAULTS']['WINDOW_WIDTH'])
