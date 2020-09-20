@@ -3,7 +3,6 @@ import random
 import os
 import timeit
 
-
 import entities
 import settings
 
@@ -17,12 +16,13 @@ if int(settings['VIDEO']['FULL_RESOLUTION']) == 1:
     SET_FULL = True
     SET_WIDTH = int(settings['DEFAULTS']['WINDOW_WIDTH'])
     SET_HEIGHT = int(settings['DEFAULTS']['WINDOW_HEIGHT'])
+    UI_SCALING = float(settings['DEFAULTS']['UI_SCALING'])
 else:
     SET_FULL = False
     SET_WIDTH = int(settings['VIDEO']['WINDOW_WIDTH'])
     SET_HEIGHT = int(settings['VIDEO']['WINDOW_HEIGHT'])
+    UI_SCALING = float(settings['VIDEO']['UI_SCALING'])
 
-UI_SCALING = float(settings['VIDEO']['UI_SCALING'])
 
 
 class IntroView(arcade.View):
