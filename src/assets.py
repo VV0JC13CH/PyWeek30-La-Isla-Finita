@@ -2,6 +2,9 @@ import arcade
 
 UI_SCALING = 0.5
 
+# INTRO
+intro_authors = arcade.load_texture("gfx/intro_team_white.png")
+
 # UI
 
 player_cursor_idle = arcade.Sprite("gfx/cursor_idle.png", UI_SCALING)

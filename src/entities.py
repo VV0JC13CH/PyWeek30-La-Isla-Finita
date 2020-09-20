@@ -1,6 +1,8 @@
 import arcade
 import assets
 
+# Textures
+intro_team = assets.intro_authors
 
 class Entity(arcade.SpriteList):
     def __init__(self):

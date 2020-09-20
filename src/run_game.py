@@ -1,5 +1,4 @@
 import arcade
-import random
 import os
 import timeit
 
@@ -24,21 +23,38 @@ else:
     UI_SCALING = float(settings['VIDEO']['UI_SCALING'])
 
 
-
 class IntroView(arcade.View):
+    def __init__(self):
+        super().__init__()
+        self.wait_sec = 0
+
     def on_show(self):
         arcade.set_background_color(DEFAULT_BG)
 
     def on_draw(self):
         arcade.start_render()
-        arcade.draw_text("Intro Screen", self.window.width/2, self.window.height/2,
-                         DEFAULT_FONT, font_size=50, anchor_x="center")
-        arcade.draw_text("Yo click",  self.window.width/2, self.window.height/2-75,
-                         DEFAULT_FONT, font_size=20, anchor_x="center")
+
+        arcade.draw_lrwh_rectangle_textured(self.window.width/2-entities.intro_team.width/4,
+                                            self.window.height/2-entities.intro_team.height/4,
+                                            entities.intro_team.width/2, entities.intro_team.height/2, entities.intro_team)
+        if self.wait_sec >= 1:
+            arcade.draw_text("PRESENTS", self.window.width/2,
+                             self.window.height/2-entities.intro_team.height/4-60,
+                             DEFAULT_FONT, font_size=20, anchor_x="center")
+        if self.wait_sec >= 2:
+            arcade.draw_text("PyWeek 30 Entry", self.window.width/2,
+                             self.window.height/2-entities.intro_team.height/4-150,
+                             DEFAULT_FONT, font_size=30, anchor_x="center")
+        if self.wait_sec >= 5:
+            arcade.draw_text("Click to continue...", 0,
+                             0, DEFAULT_FONT, font_size=20, anchor_x="left")
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
         menu_view = MenuView()
         self.window.show_view(menu_view)
+
+    def update(self, delta_time):
+        self.wait_sec += delta_time
 
 
 class MenuView(arcade.View):
