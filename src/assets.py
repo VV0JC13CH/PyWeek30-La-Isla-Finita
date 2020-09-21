@@ -2,13 +2,11 @@ import arcade
 # to be cross-platform:
 from pathlib import Path
 
+UI_SCALING = 0.5
 
 
 def path_to_string(directory, file):
     return str(Path.cwd().joinpath(directory, file).resolve())
-
-
-UI_SCALING = 0.5
 
 
 # INTRO
@@ -18,6 +16,10 @@ intro_authors = arcade.load_texture(path_to_string('gfx', 'intro_team_white.png'
 player_cursor_idle = arcade.Sprite(path_to_string('gfx', 'cursor_idle.png'), UI_SCALING)
 player_cursor_hover = arcade.Sprite(path_to_string('gfx', 'cursor_hover.png'), UI_SCALING)
 player_cursor_select = arcade.Sprite(path_to_string('gfx', 'cursor_select.png'), UI_SCALING)
+
+# UI BUTTONS
+button_idle = arcade.Sprite(path_to_string('gfx', 'ui_button.png'), UI_SCALING)
+button_hover = arcade.Sprite(path_to_string('gfx', 'ui_button_hover.png'), UI_SCALING)
 
 # STRINGS
 

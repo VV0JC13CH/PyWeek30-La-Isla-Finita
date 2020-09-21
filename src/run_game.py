@@ -73,11 +73,10 @@ class IntroView(arcade.View):
 class MenuView(arcade.View):
     def __init__(self):
         super().__init__()
-        self.main_menu_mng = entities.UiManager(SET_WIDTH, SET_HEIGHT)
 
     def on_show(self):
         arcade.set_background_color(DEFAULT_BG)
-        self.main_menu_mng.on_show_view_main()
+
 
     def on_draw(self):
         arcade.start_render()
@@ -113,8 +112,7 @@ class GameView(arcade.View):
 
         self.time_taken = 0
 
-        # Entities (lists of sprites)
-        self.cursor = entities.Cursor()
+
 
         # Developer mode
         self.processing_time = 0
@@ -123,11 +121,7 @@ class GameView(arcade.View):
         self.fps_start_timer = None
         self.fps = None
 
-    def on_show(self):
-        arcade.set_background_color(DEFAULT_BG)
 
-        # Don't show the mouse cursor
-        self.window.set_mouse_visible(False)
 
     def on_draw(self):
         # Start timing how long this takes
@@ -159,8 +153,7 @@ class GameView(arcade.View):
             output = f"FPS: {self.fps:.0f}"
             arcade.draw_text(output, 20, self.window.height - 80, arcade.color.BLACK, 16)
 
-        # Draw all the sprites.
-        self.cursor.draw()
+
 
         # Below code has to be at the end of rendering
         self.draw_time = timeit.default_timer() - draw_start_time
@@ -168,15 +161,6 @@ class GameView(arcade.View):
     def on_update(self, delta_time):
         self.time_taken += delta_time
 
-        # Call update on all sprites (The sprites don't do much in this
-        # example though.)
-        self.cursor.update()
-
-    def on_mouse_motion(self, x, y, _dx, _dy):
-        """
-        Called whenever the mouse moves.
-        """
-        self.cursor.get_position(x, y)
 
     def on_key_press(self, key, _modifiers):
         if key == arcade.key.ESCAPE:
@@ -257,6 +241,9 @@ class Island(arcade.Window):
         file_path = os.path.dirname(os.path.abspath(__file__))
         os.chdir(file_path)
 
+        # Entities (lists of sprites)
+        self.cursor = entities.Cursor()
+
         # Start viewport
         if SET_SKIP_INTRO == 1:
             self.start_view = MenuView()
@@ -274,9 +261,25 @@ class Island(arcade.Window):
     def on_update(self, delta_time: float):
         self.music_mng.on_update(delta_time)
 
+        # Call update on all sprites (The sprites don't do much in this
+        # example though.)
+        self.cursor.update()
+
     def update_resolution(self):
         width, height = self.get_size()
         self.set_viewport(0, width, 0, height)
+
+    def on_mouse_motion(self, x, y, _dx, _dy):
+        """
+        Called whenever the mouse moves.
+        """
+        self.cursor.get_position(x, y)
+
+    def on_show(self):
+        arcade.set_background_color(DEFAULT_BG)
+
+        # Don't show the mouse cursor
+        self.set_mouse_visible(False)
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
@@ -298,6 +301,9 @@ class Island(arcade.Window):
             # do a bit of math for that.
             self.set_viewport(0, SET_WIDTH, 0, SET_HEIGHT)
 
+    def on_draw(self):
+        # Draw all the sprites.
+        self.cursor.draw()
 
 def main():
     game = Island()

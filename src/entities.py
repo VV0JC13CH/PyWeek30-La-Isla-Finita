@@ -2,9 +2,6 @@ import arcade
 import assets
 # time for sounds purposes:
 import time
-# Damns...those UIs:
-from arcade.gui import UIFlatButton, UIGhostFlatButton, UIManager
-from arcade.gui.ui_style import UIStyle
 
 # Textures
 intro_team = assets.intro_authors
@@ -19,18 +16,45 @@ class Entity(arcade.SpriteList):
         super().__init__()
 
 
-class Cursor(Entity):
+class Cursor(arcade.SpriteList):
     def __init__(self):
         super().__init__()
         self.center_x = 50
         self.center_y = 50
-        self.state = 'idle'
         self.idle = assets.player_cursor_idle
         self.hover = assets.player_cursor_hover
         self.select = assets.player_cursor_select
+        self.current_state = 'idle'
         self.append(self.idle)
 
     def get_position(self, dx, dy):
+        for sprite in self:
+            sprite.center_x = dx
+            sprite.center_y = dy
+
+    def change_state(self, state):
+        if state == 'hover':
+            self.sprite_list.clear()
+            self.append(self.hover)
+        elif state == 'select':
+            self.sprite_list.clear()
+            self.append(self.select)
+        else:
+            self.sprite_list.clear()
+            self.append(self.idle)
+
+
+class Button(Entity):
+    def __init__(self, x, y, texture_idle, texture_hover):
+        super().__init__()
+        self.center_x = x
+        self.center_y = y
+        self.state = 'idle'
+        self.idle = texture_idle
+        self.hover = texture_hover
+        self.append(self.idle)
+
+    def get_mouse_position(self, dx, dy):
         for sprite in self:
             sprite.center_x = dx
             sprite.center_y = dy
@@ -94,50 +118,19 @@ class MusicManager:
             self.play_song()
 
 
-class UiManager:
-    def __init__(self, viewport_width, viewport_height):
-        self.ui_manager = UIManager()
+class UiManager(Entity):
+    def __init__(self, viewport_width, viewport_height, mouse_entity):
+        super().__init__()
         self.window_width = viewport_width
         self.window_height = viewport_height
+        self.button_idle = assets.button_idle
+        self.button_hover = assets.button_hover
 
-    def setup_main(self):
-        """ Setup the view """
-        self.ui_manager.purge_ui_elements()
-        flat = UIFlatButton('Hello world', center_x=200, center_y=self.window_height // 2, width=200, height=40)
-        flat.set_style_attrs(
-            font_color=arcade.color.WHITE,
-            font_color_hover=arcade.color.WHITE,
-            font_color_press=arcade.color.WHITE,
-            bg_color=(51, 139, 57),
-            bg_color_hover=(51, 139, 57),
-            bg_color_press=(28, 71, 32),
-            border_color=(51, 139, 57),
-            border_color_hover=arcade.color.WHITE,
-            border_color_press=arcade.color.WHITE
-        )
-        self.ui_manager.add_ui_element(flat)
+    def draw_main(self, window_width, window_height, mouse_entity):
+        start_game = (self.button_idle, self.button_hover)
+        load_game = (self.button_idle, self.button_hover)
+        options = (self.button_idle, self.button_hover)
+        exit = (self.button_idle, self.button_hover)
 
-        # creates a new class, which will match the id
-        UIStyle.default_style().set_class_attrs(
-            'right_button',
-            font_color=arcade.color.WHITE,
-            font_color_hover=arcade.color.WHITE,
-            font_color_press=arcade.color.WHITE,
-            bg_color=(135, 21, 25),
-            bg_color_hover=(135, 21, 25),
-            bg_color_press=(122, 21, 24),
-            border_color=(135, 21, 25),
-            border_color_hover=arcade.color.WHITE,
-            border_color_press=arcade.color.WHITE
-        )
-        self.ui_manager.add_ui_element(UIGhostFlatButton(
-            'Hello world',
-            center_x=600,
-            center_y=self.window_height // 2,
-            width=200,
-            height=40,
-            id='right_button'
-        ))
 
-    def on_show_view_main(self):
-        self.setup_main()
+
