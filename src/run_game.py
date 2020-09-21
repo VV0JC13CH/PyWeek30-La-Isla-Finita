@@ -77,7 +77,6 @@ class MenuView(arcade.View):
     def on_show(self):
         arcade.set_background_color(DEFAULT_BG)
 
-
     def on_draw(self):
         arcade.start_render()
         arcade.draw_text("Menu Screen",  self.window.width/2, self.window.height/2,
@@ -160,7 +159,6 @@ class GameView(arcade.View):
 
     def on_update(self, delta_time):
         self.time_taken += delta_time
-
 
     def on_key_press(self, key, _modifiers):
         if key == arcade.key.ESCAPE:

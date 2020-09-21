@@ -19,8 +19,6 @@ class Entity(arcade.SpriteList):
 class Cursor(arcade.SpriteList):
     def __init__(self):
         super().__init__()
-        self.center_x = 50
-        self.center_y = 50
         self.idle = assets.player_cursor_idle
         self.hover = assets.player_cursor_hover
         self.select = assets.player_cursor_select
@@ -44,20 +42,34 @@ class Cursor(arcade.SpriteList):
             self.append(self.idle)
 
 
-class Button(Entity):
-    def __init__(self, x, y, texture_idle, texture_hover):
+class Button(arcade.SpriteList):
+    # EVERYTHING IS FREAKING BUTTON IN THIS GAME
+    def __init__(self, texture_idle=assets.button_idle, texture_hover=assets.button_hover):
         super().__init__()
-        self.center_x = x
-        self.center_y = y
-        self.state = 'idle'
         self.idle = texture_idle
         self.hover = texture_hover
+        self.select = assets.player_cursor_select
+        self.current_state = 'idle'
         self.append(self.idle)
 
-    def get_mouse_position(self, dx, dy):
-        for sprite in self:
-            sprite.center_x = dx
-            sprite.center_y = dy
+    def change_state(self, state):
+        if state == 'hover':
+            self.sprite_list.clear()
+            self.append(self.hover)
+        else:
+            self.sprite_list.clear()
+            self.append(self.idle)
+
+    def detect_mouse(self, mouse_instance):
+        if arcade.check_for_collision_with_list(mouse_instance, self) != 0:
+            self.change_state(state='hover')
+        else:
+            self.change_state(state='idle')
+
+
+
+
+
 
 
 class MusicManager:
