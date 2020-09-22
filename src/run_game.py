@@ -81,7 +81,9 @@ class MenuView(arcade.View):
                                            width=200, height=50,
                                            texture_idle=entities.button_textures['exit'],
                                            texture_hover=entities.button_textures['exit_hover'])
-        self.background = entities.DynamicBackground(x=self.window.width/2, y=self.window.height/2)
+        self.background = entities.DynamicBackground(x=self.window.width/2, y=self.window.height/2,
+                                                     res_width=self.window.width,
+                                                     res_height=self.window.height)
 
     def on_show(self):
         arcade.set_background_color(DEFAULT_BG)
@@ -93,7 +95,7 @@ class MenuView(arcade.View):
 
     def on_draw(self):
         arcade.start_render()
-        self.background.draw()
+        self.background.on_draw()
         self.button_start.draw()
         self.button_exit.draw()
 
@@ -137,7 +139,7 @@ class StartGame(arcade.View):
 
     def on_draw(self):
         arcade.start_render()
-        self.background.draw()
+        self.background.on_draw()
         for button in self.slot_buttons:
             button.draw()
         for button in self.slot_buttons_restart:
@@ -177,7 +179,7 @@ class GameView(arcade.View):
             self.fps_start_timer = timeit.default_timer()
         self.frame_count += 1
         arcade.start_render()
-        self.background.draw()
+        self.background.on_draw()
         # Display timings
         output = f"Processing time: {self.processing_time:.3f}"
         arcade.draw_text(output, 20, self.window.height - 20, arcade.color.BLACK, 16)
@@ -239,7 +241,7 @@ class PauseView(arcade.View):
 
     def on_draw(self):
         arcade.start_render()
-        self.background.draw()
+        self.background.on_draw()
         self.button_resume.draw()
         self.button_exit.draw()
         self.button_menu.draw()
