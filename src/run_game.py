@@ -35,9 +35,6 @@ else:
 
 SET_DEVELOPER = int(settings['DEFAULTS']['DEVELOPER_MODE'])
 
-# GLOBAL VARS
-GLOBAL_CURSOR = entities.Cursor()
-
 
 class IntroView(arcade.View):
     def __init__(self):
@@ -84,16 +81,19 @@ class MenuView(arcade.View):
                                            width=200, height=50,
                                            texture_idle=entities.button_textures['exit'],
                                            texture_hover=entities.button_textures['exit_hover'])
+        self.background = entities.DynamicBackground(x=self.window.width/2, y=self.window.height/2)
 
     def on_show(self):
         arcade.set_background_color(DEFAULT_BG)
 
     def on_update(self, delta_time: float):
+        self.background.on_update()
         self.button_start.detect_mouse(self.window.cursor)
         self.button_exit.detect_mouse(self.window.cursor)
 
     def on_draw(self):
         arcade.start_render()
+        self.background.draw()
         self.button_start.draw()
         self.button_exit.draw()
 
@@ -283,7 +283,6 @@ class Island(arcade.Window):
 
         # Entities (lists of sprites)
         self.cursor = entities.Cursor()
-        GLOBAL_CURSOR = self.cursor
 
         # Start viewport
         if SET_SKIP_INTRO == 1:

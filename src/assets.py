@@ -49,7 +49,7 @@ button_menu_hover = arcade.Sprite(path_to_string('gfx', 'ui_button_menu_hover.pn
 dynamic_background_frames = []
 
 
-for x in range(1,6,1):
+for x in range(1,7,1):
     bush = arcade.Sprite(path_to_string('gfx', 'bg_bush'+str(x)+'.png'), BG_SCALING)
     island = arcade.Sprite(path_to_string('gfx', 'bg_island'+str(x)+'.png'), BG_SCALING)
     leafs = arcade.Sprite(path_to_string('gfx', 'bg_leafs'+str(x)+'.png'), BG_SCALING)

@@ -68,28 +68,43 @@ class Cursor(arcade.SpriteList):
 
 class DynamicBackground(Entity):
     # DOES NOTHING MEANS EVERYTHING
-    def __init__(self, width=800, height=600, x=400, y=300, time_counter=0.0):
+    def __init__(self, width=800, height=600, x=400, y=300):
         super().__init__()
         self.x = x
         self.y = y
         self.width = width
         self.height = height
+        self.counter = 0
         self.sky = assets.game_sky
         self.sea = assets.sea
         self.frames_of_bg = assets.dynamic_background_frames
-        self.day_time = time_counter
+        self.current_frame = 0
         self.frame0 = self.frames_of_bg[0]
         self.frame1 = self.frames_of_bg[1]
         self.frame2 = self.frames_of_bg[2]
         self.frame3 = self.frames_of_bg[3]
         self.frame4 = self.frames_of_bg[4]
-        self.append(self.frame0)
+        self.frame5 = self.frames_of_bg[5]
+        for sprite in self.frame0:
+            self.append(sprite)
         for sprite_group in self.frames_of_bg:
             for sprite in sprite_group:
                 sprite.center_x = self.x
                 sprite.center_y = self.y
                 sprite.width = self.width
                 sprite.height = self.height
+
+    def change_frame(self, frame):
+        self.sprite_list.clear()
+        for sprite in self.frames_of_bg[frame]:
+            self.append(sprite)
+
+    def on_update(self, delta_time: float = 1/60):
+        if self.current_frame < 5:
+            self.current_frame += 0.1
+        else:
+            self.current_frame = 0
+        self.change_frame(int(self.current_frame))
 
 
 class Button(Entity):
