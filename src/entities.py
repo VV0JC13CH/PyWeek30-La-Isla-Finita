@@ -79,25 +79,16 @@ class DynamicBackground(Entity):
         self.sea = assets.sea
         self.frames_of_bg = assets.dynamic_background_frames
         self.current_frame = 0
-        self.frame0 = self.frames_of_bg[0]
-        self.frame1 = self.frames_of_bg[1]
-        self.frame2 = self.frames_of_bg[2]
-        self.frame3 = self.frames_of_bg[3]
-        self.frame4 = self.frames_of_bg[4]
-        self.frame5 = self.frames_of_bg[5]
-        for sprite in self.frame0:
-            self.append(sprite)
-        for sprite_group in self.frames_of_bg:
-            for sprite in sprite_group:
-                sprite.center_x = self.x
-                sprite.center_y = self.y
-                sprite.width = self.width
-                sprite.height = self.height
+        self.append(self.frames_of_bg[0])
+        for sprite in self.frames_of_bg:
+            sprite.center_x = self.x
+            sprite.center_y = self.y
+            sprite.width = self.width
+            sprite.height = self.height
 
     def change_frame(self, frame):
         self.sprite_list.clear()
-        for sprite in self.frames_of_bg[frame]:
-            self.append(sprite)
+        self.append(self.frames_of_bg[frame])
 
     def on_update(self, delta_time: float = 1/60):
         if self.current_frame < 5:

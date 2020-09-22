@@ -50,13 +50,8 @@ dynamic_background_frames = []
 
 
 for x in range(1,7,1):
-    bush = arcade.Sprite(path_to_string('gfx', 'bg_bush'+str(x)+'.png'), BG_SCALING)
-    island = arcade.Sprite(path_to_string('gfx', 'bg_island'+str(x)+'.png'), BG_SCALING)
-    leafs = arcade.Sprite(path_to_string('gfx', 'bg_leafs'+str(x)+'.png'), BG_SCALING)
-    sea_effects = arcade.Sprite(path_to_string('gfx', 'bg_see_effects'+str(x)+'.png'), BG_SCALING)
-    tree = arcade.Sprite(path_to_string('gfx', 'bg_tree'+str(x)+'.png'), BG_SCALING)
-    single_frame = [bush, island, leafs, tree, sea_effects]
-    dynamic_background_frames.append(single_frame)
+    background = arcade.Sprite(path_to_string('gfx', 'bg_full_island'+str(x)+'.png'), BG_SCALING)
+    dynamic_background_frames.append(background)
 
 # SEA
 
