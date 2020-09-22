@@ -66,7 +66,33 @@ class Cursor(arcade.SpriteList):
             self.append(self.idle)
 
 
-class Button(arcade.SpriteList):
+class DynamicBackground(Entity):
+    # DOES NOTHING MEANS EVERYTHING
+    def __init__(self, width=800, height=600, x=400, y=300, time_counter=0.0):
+        super().__init__()
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.sky = assets.game_sky
+        self.sea = assets.sea
+        self.frames_of_bg = assets.dynamic_background_frames
+        self.day_time = time_counter
+        self.frame0 = self.frames_of_bg[0]
+        self.frame1 = self.frames_of_bg[1]
+        self.frame2 = self.frames_of_bg[2]
+        self.frame3 = self.frames_of_bg[3]
+        self.frame4 = self.frames_of_bg[4]
+        self.append(self.frame0)
+        for sprite_group in self.frames_of_bg:
+            for sprite in sprite_group:
+                sprite.center_x = self.x
+                sprite.center_y = self.y
+                sprite.width = self.width
+                sprite.height = self.height
+
+
+class Button(Entity):
     # EVERYTHING IS FREAKING BUTTON IN THIS GAME
     def __init__(self, width=200, height=200, x=200, y=200,
                  texture_idle=assets.button_idle, texture_hover=assets.button_hover, action='change_scene'):
@@ -101,12 +127,6 @@ class Button(arcade.SpriteList):
             self.change_state(state='hover')
         else:
             self.change_state(state='idle')
-
-
-
-
-
-
 
 
 class MusicManager:
@@ -159,9 +179,6 @@ class MusicManager:
 
         position = self.music.get_stream_position()
 
-        # The position pointer is reset to 0 right after we finish the song.
-        # This makes it very difficult to figure out if we just started playing
-        # or if we are doing playing.
         if position == 0.0:
             self.advance_song()
             self.play_song()
