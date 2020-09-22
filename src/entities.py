@@ -20,10 +20,18 @@ button_textures = {"start": assets.button_start_idle,
                    "restart_hover": assets.button_restart_hover,
                    "slot1": assets.button_slot1_idle,
                    "slot1_hover": assets.button_slot1_hover,
+                   "restart1": assets.button_restart1_idle,
+                   "restart1_hover": assets.button_restart1_hover,
                    "slot2": assets.button_slot2_idle,
                    "slot2_hover": assets.button_slot2_hover,
-                   "slo3": assets.button_slot3_idle,
-                   "slo3_hover": assets.button_slot3_hover
+                   "restart2": assets.button_restart2_idle,
+                   "restart2_hover": assets.button_restart2_hover,
+                   "slot3": assets.button_slot3_idle,
+                   "slot3_hover": assets.button_slot3_hover,
+                   "restart3": assets.button_restart3_idle,
+                   "restart3_hover": assets.button_restart3_hover,
+                   "menu": assets.button_menu_idle,
+                   "menu_hover": assets.button_menu_hover
 }
 
 

@@ -10,6 +10,7 @@ settings = settings.settings_load()
 # INIT DATA A LOT OFF SETINGS
 SCENES = ['INTRO', 'MAIN', 'OPTIONS', 'PAUSE', 'GAME_OVER', 'VICTORY', 'INTRODUCTION', 'LOAD', 'SCORES']
 SET_TITLE = settings['GAME']['TITLE']
+SET_SAVE_SLOTS = int(settings['DEFAULTS']['SAVE_SLOTS'])
 DEFAULT_BG = arcade.color.WHITE
 DEFAULT_FONT = arcade.color.BLACK
 SET_MUSIC_VOLUME = settings['AUDIO']['MUSIC_VOL']
@@ -98,26 +99,56 @@ class MenuView(arcade.View):
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
         if self.button_start.current_state == 'hover':
-            instructions_view = InstructionView()
-            self.window.show_view(instructions_view)
+            start_game_view = StartGame()
+            self.window.show_view(start_game_view)
         if self.button_exit.current_state == 'hover':
             self.window.close()
 
 
-class InstructionView(arcade.View):
+class StartGame(arcade.View):
+    def __init__(self):
+        super().__init__()
+        self.slot_buttons = []
+        self.slot_buttons_restart = []
+        self.margin = self.window.width/4
+
+        for slot in range(1, SET_SAVE_SLOTS+1):
+            _slot_button = entities.Button(x=self.margin*slot, y=self.window.height/3,
+                                           width=150, height=35,
+                                           texture_idle=entities.button_textures['slot'+str(slot)],
+                                           texture_hover=entities.button_textures['slot'+str(slot)+'_hover'])
+            _slot_restart_button = entities.Button(x=self.margin*slot, y=self.window.height/4,
+                                                   width=150, height=35,
+                                                   texture_idle=entities.button_textures['restart'+str(slot)],
+                                                   texture_hover=entities.button_textures['restart'+str(slot)+'_hover'])
+            self.slot_buttons.append(_slot_button)
+            self.slot_buttons_restart.append(_slot_restart_button)
+
     def on_show(self):
         arcade.set_background_color(DEFAULT_BG)
 
+    def on_update(self, delta_time: float):
+        for button in self.slot_buttons:
+            button.detect_mouse(self.window.cursor)
+        for button in self.slot_buttons_restart:
+            button.detect_mouse(self.window.cursor)
+
     def on_draw(self):
         arcade.start_render()
-        arcade.draw_text("Instructions Screen",  self.window.width/2, self.window.height/2,
-                         DEFAULT_FONT, font_size=50, anchor_x="center")
-        arcade.draw_text("I dare you!",  self.window.width/2, self.window.height/2-75,
-                         DEFAULT_FONT, font_size=20, anchor_x="center")
+        for button in self.slot_buttons:
+            button.draw()
+        for button in self.slot_buttons_restart:
+            button.draw()
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
-        game_view = GameView()
-        self.window.show_view(game_view)
+        for button in self.slot_buttons:
+            if button.current_state == 'hover':
+                game_view = GameView()
+                self.window.show_view(game_view)
+        for button in self.slot_buttons_restart:
+            if button.current_state == 'hover':
+                game_view = GameView()
+                self.window.show_view(game_view)
 
 
 class GameView(arcade.View):
@@ -125,8 +156,6 @@ class GameView(arcade.View):
         super().__init__()
 
         self.time_taken = 0
-
-
 
         # Developer mode
         self.processing_time = 0
@@ -179,42 +208,44 @@ class GameView(arcade.View):
 
 
 class PauseView(arcade.View):
-    def __init__(self, game_view):
+    def __init__(self, paused_game_state):
         super().__init__()
-        self.game_view = game_view
+        self.paused_game_state = paused_game_state
+        self.button_resume = entities.Button(x=self.window.width/2, y=self.window.height*3/6,
+                                             width=200, height=50,
+                                             texture_idle=entities.button_textures['resume'],
+                                             texture_hover=entities.button_textures['resume_hover'])
+        self.button_menu = entities.Button(x=self.window.width/2, y=self.window.height*2/6,
+                                           width=200, height=50,
+                                           texture_idle=entities.button_textures['menu'],
+                                           texture_hover=entities.button_textures['menu_hover'])
+        self.button_exit = entities.Button(x=self.window.width / 2, y=self.window.height*1/6,
+                                           width=200, height=50,
+                                           texture_idle=entities.button_textures['exit'],
+                                           texture_hover=entities.button_textures['exit_hover'])
 
     def on_show(self):
         arcade.set_background_color(DEFAULT_BG)
 
+    def on_update(self, delta_time: float):
+        self.button_resume.detect_mouse(self.window.cursor)
+        self.button_exit.detect_mouse(self.window.cursor)
+        self.button_menu.detect_mouse(self.window.cursor)
+
     def on_draw(self):
         arcade.start_render()
+        self.button_resume.draw()
+        self.button_exit.draw()
+        self.button_menu.draw()
 
-        # Draw player, for effect, on pause screen.
-        # The previous View (GameView) was passed in
-        # and saved in self.game_view.
-        arcade.draw_text("PAUSED", self.window.width/2, self.window.height/2+50,
-                         DEFAULT_FONT, font_size=50, anchor_x="center")
-
-        # Show tip to return or reset
-        arcade.draw_text("Press Esc. to return",
-                         self.window.width/2,
-                         self.window.height/2,
-                         DEFAULT_FONT,
-                         font_size=20,
-                         anchor_x="center")
-        arcade.draw_text("Press Enter to reset",
-                         self.window.width / 2,
-                         self.window.height / 2 - 30,
-                         DEFAULT_FONT,
-                         font_size=20,
-                         anchor_x="center")
-
-    def on_key_press(self, key, _modifiers):
-        if key == arcade.key.ESCAPE:   # resume game
-            self.window.show_view(self.game_view)
-        elif key == arcade.key.ENTER:  # reset game
-            game = GameView()
-            self.window.show_view(game)
+    def on_mouse_press(self, _x, _y, _button, _modifiers):
+        if self.button_resume.current_state == 'hover':
+            self.window.show_view(self.paused_game_state)
+        if self.button_menu.current_state == 'hover':
+            menu_view = MenuView()
+            self.window.show_view(menu_view)
+        if self.button_exit.current_state == 'hover':
+            self.window.close()
 
 
 class GameOverView(arcade.View):
