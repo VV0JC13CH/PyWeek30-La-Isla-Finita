@@ -7,7 +7,7 @@ import settings
 
 settings = settings.settings_load()
 
-# INIT DATA
+# INIT DATA A LOT OFF SETINGS
 SCENES = ['INTRO', 'MAIN', 'OPTIONS', 'PAUSE', 'GAME_OVER', 'VICTORY', 'INTRODUCTION', 'LOAD', 'SCORES']
 SET_TITLE = settings['GAME']['TITLE']
 DEFAULT_BG = arcade.color.WHITE
@@ -32,8 +32,10 @@ else:
     SET_SKIP_INTRO = 0
     CURRENT_SCENE = SCENES[0]
 
-
 SET_DEVELOPER = int(settings['DEFAULTS']['DEVELOPER_MODE'])
+
+# GLOBAL VARS
+GLOBAL_CURSOR = entities.Cursor()
 
 
 class IntroView(arcade.View):
@@ -73,20 +75,33 @@ class IntroView(arcade.View):
 class MenuView(arcade.View):
     def __init__(self):
         super().__init__()
+        self.button_start = entities.Button(x=self.window.width/2, y=self.window.height*2/6,
+                                            width=200, height=50,
+                                            texture_idle=entities.button_textures['start'],
+                                            texture_hover=entities.button_textures['start_hover'])
+        self.button_exit = entities.Button(x=self.window.width / 2, y=self.window.height*1/6,
+                                           width=200, height=50,
+                                           texture_idle=entities.button_textures['exit'],
+                                           texture_hover=entities.button_textures['exit_hover'])
 
     def on_show(self):
         arcade.set_background_color(DEFAULT_BG)
 
+    def on_update(self, delta_time: float):
+        self.button_start.detect_mouse(self.window.cursor)
+        self.button_exit.detect_mouse(self.window.cursor)
+
     def on_draw(self):
         arcade.start_render()
-        arcade.draw_text("Menu Screen",  self.window.width/2, self.window.height/2,
-                         DEFAULT_FONT, font_size=50, anchor_x="center")
-        arcade.draw_text("Once again!",  self.window.width/2, self.window.height/2-75,
-                         DEFAULT_FONT, font_size=20, anchor_x="center")
+        self.button_start.draw()
+        self.button_exit.draw()
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
-        instructions_view = InstructionView()
-        self.window.show_view(instructions_view)
+        if self.button_start.current_state == 'hover':
+            instructions_view = InstructionView()
+            self.window.show_view(instructions_view)
+        if self.button_exit.current_state == 'hover':
+            self.window.close()
 
 
 class InstructionView(arcade.View):
@@ -120,8 +135,6 @@ class GameView(arcade.View):
         self.fps_start_timer = None
         self.fps = None
 
-
-
     def on_draw(self):
         # Start timing how long this takes
         draw_start_time = timeit.default_timer()
@@ -151,8 +164,6 @@ class GameView(arcade.View):
         if self.fps is not None:
             output = f"FPS: {self.fps:.0f}"
             arcade.draw_text(output, 20, self.window.height - 80, arcade.color.BLACK, 16)
-
-
 
         # Below code has to be at the end of rendering
         self.draw_time = timeit.default_timer() - draw_start_time
@@ -241,6 +252,7 @@ class Island(arcade.Window):
 
         # Entities (lists of sprites)
         self.cursor = entities.Cursor()
+        GLOBAL_CURSOR = self.cursor
 
         # Start viewport
         if SET_SKIP_INTRO == 1:
@@ -302,6 +314,7 @@ class Island(arcade.Window):
     def on_draw(self):
         # Draw all the sprites.
         self.cursor.draw()
+
 
 def main():
     game = Island()

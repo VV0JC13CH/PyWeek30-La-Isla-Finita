@@ -10,6 +10,22 @@ intro_team = assets.intro_authors
 music_list = [assets.track01,
               assets.track02]
 
+button_textures = {"start": assets.button_start_idle,
+                   "start_hover": assets.button_start_hover,
+                   "exit": assets.button_exit_idle,
+                   "exit_hover": assets.button_exit_hover,
+                   "resume": assets.button_resume_idle,
+                   "resume_hover": assets.button_resume_hover,
+                   "restart": assets.button_restart_idle,
+                   "restart_hover": assets.button_restart_hover,
+                   "slot1": assets.button_slot1_idle,
+                   "slot1_hover": assets.button_slot1_hover,
+                   "slot2": assets.button_slot2_idle,
+                   "slot2_hover": assets.button_slot2_hover,
+                   "slo3": assets.button_slot3_idle,
+                   "slo3_hover": assets.button_slot3_hover
+}
+
 
 class Entity(arcade.SpriteList):
     def __init__(self):
@@ -44,15 +60,27 @@ class Cursor(arcade.SpriteList):
 
 class Button(arcade.SpriteList):
     # EVERYTHING IS FREAKING BUTTON IN THIS GAME
-    def __init__(self, texture_idle=assets.button_idle, texture_hover=assets.button_hover):
+    def __init__(self, width=200, height=200, x=200, y=200,
+                 texture_idle=assets.button_idle, texture_hover=assets.button_hover, action='change_scene'):
         super().__init__()
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.action = action
         self.idle = texture_idle
         self.hover = texture_hover
-        self.select = assets.player_cursor_select
+        self.all_sprites = [self.idle, self.hover]
         self.current_state = 'idle'
         self.append(self.idle)
+        for sprite in self.all_sprites:
+            sprite.center_x = self.x
+            sprite.center_y = self.y
+            sprite.width = self.width
+            sprite.height = self.height
 
     def change_state(self, state):
+        self.current_state = state
         if state == 'hover':
             self.sprite_list.clear()
             self.append(self.hover)
@@ -61,10 +89,11 @@ class Button(arcade.SpriteList):
             self.append(self.idle)
 
     def detect_mouse(self, mouse_instance):
-        if arcade.check_for_collision_with_list(mouse_instance, self) != 0:
+        if arcade.check_for_collision_with_list(self[0], mouse_instance):
             self.change_state(state='hover')
         else:
             self.change_state(state='idle')
+
 
 
 
@@ -128,21 +157,5 @@ class MusicManager:
         if position == 0.0:
             self.advance_song()
             self.play_song()
-
-
-class UiManager(Entity):
-    def __init__(self, viewport_width, viewport_height, mouse_entity):
-        super().__init__()
-        self.window_width = viewport_width
-        self.window_height = viewport_height
-        self.button_idle = assets.button_idle
-        self.button_hover = assets.button_hover
-
-    def draw_main(self, window_width, window_height, mouse_entity):
-        start_game = (self.button_idle, self.button_hover)
-        load_game = (self.button_idle, self.button_hover)
-        options = (self.button_idle, self.button_hover)
-        exit = (self.button_idle, self.button_hover)
-
 
 
