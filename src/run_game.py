@@ -99,15 +99,16 @@ class MenuView(arcade.View):
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
         if self.button_start.current_state == 'hover':
-            start_game_view = StartGame()
+            start_game_view = StartGame(background = self.background)
             self.window.show_view(start_game_view)
         if self.button_exit.current_state == 'hover':
             self.window.close()
 
 
 class StartGame(arcade.View):
-    def __init__(self):
+    def __init__(self, background):
         super().__init__()
+        self.background = background
         self.slot_buttons = []
         self.slot_buttons_restart = []
         self.margin = self.window.width/4
@@ -128,6 +129,7 @@ class StartGame(arcade.View):
         arcade.set_background_color(DEFAULT_BG)
 
     def on_update(self, delta_time: float):
+        self.background.on_update()
         for button in self.slot_buttons:
             button.detect_mouse(self.window.cursor)
         for button in self.slot_buttons_restart:
@@ -135,6 +137,7 @@ class StartGame(arcade.View):
 
     def on_draw(self):
         arcade.start_render()
+        self.background.draw()
         for button in self.slot_buttons:
             button.draw()
         for button in self.slot_buttons_restart:
@@ -143,7 +146,7 @@ class StartGame(arcade.View):
     def on_mouse_press(self, _x, _y, _button, _modifiers):
         for button in self.slot_buttons:
             if button.current_state == 'hover':
-                game_view = GameView()
+                game_view = GameView(background=self.background)
                 self.window.show_view(game_view)
         for button in self.slot_buttons_restart:
             if button.current_state == 'hover':
@@ -152,9 +155,9 @@ class StartGame(arcade.View):
 
 
 class GameView(arcade.View):
-    def __init__(self):
+    def __init__(self, background):
         super().__init__()
-
+        self.background = background
         self.time_taken = 0
 
         # Developer mode
@@ -167,7 +170,6 @@ class GameView(arcade.View):
     def on_draw(self):
         # Start timing how long this takes
         draw_start_time = timeit.default_timer()
-
         if self.frame_count % 60 == 0:
             if self.fps_start_timer is not None:
                 total_time = timeit.default_timer() - self.fps_start_timer
@@ -175,6 +177,7 @@ class GameView(arcade.View):
             self.fps_start_timer = timeit.default_timer()
         self.frame_count += 1
         arcade.start_render()
+        self.background.draw()
         # Display timings
         output = f"Processing time: {self.processing_time:.3f}"
         arcade.draw_text(output, 20, self.window.height - 20, arcade.color.BLACK, 16)
@@ -199,17 +202,19 @@ class GameView(arcade.View):
 
     def on_update(self, delta_time):
         self.time_taken += delta_time
+        self.background.on_update()
 
     def on_key_press(self, key, _modifiers):
         if key == arcade.key.ESCAPE:
             # pass self, the current view, to preserve this view's state
-            pause = PauseView(self)
+            pause = PauseView(paused_game_state=self, background=self.background)
             self.window.show_view(pause)
 
 
 class PauseView(arcade.View):
-    def __init__(self, paused_game_state):
+    def __init__(self, paused_game_state, background):
         super().__init__()
+        self.background = background
         self.paused_game_state = paused_game_state
         self.button_resume = entities.Button(x=self.window.width/2, y=self.window.height*3/6,
                                              width=200, height=50,
@@ -234,6 +239,7 @@ class PauseView(arcade.View):
 
     def on_draw(self):
         arcade.start_render()
+        self.background.draw()
         self.button_resume.draw()
         self.button_exit.draw()
         self.button_menu.draw()
