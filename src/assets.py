@@ -47,35 +47,14 @@ button_menu_hover = arcade.Sprite(path_to_string('gfx', 'ui_button_menu_hover.pn
 
 # BACKGROUND
 dynamic_background_frames = []
-dynamic_background_sky_by_hour = [
-    (14, 14, 14),
-    (1, 25, 52),
-    (2, 33, 61),
-    (2, 40, 67),
-    (2, 43, 72),
-    (3, 52, 78),
-    (11, 69, 101),
-    (20, 109, 137),
-    (60, 161, 178),
-    (149, 218, 200),
-    (195, 222, 160),
-    (239, 221, 129),
-    (254, 207, 113),
-    (253, 205, 107),
-    (253, 202, 106),
-    (249, 182, 98),
-    (227, 121, 122),
-    (166, 80, 135),
-    (92, 48, 126),
-    (58, 33, 116),
-    (44, 37, 107),
-    (25, 36, 93),
-    (4, 29, 77),
-    (1, 25, 52),
-]
+dynamic_background_sky_by_hour = []
+
 for x in range(1,7,1):
     background = arcade.Sprite(path_to_string('gfx', 'bg_full_island'+str(x)+'.png'), BG_SCALING)
     dynamic_background_frames.append(background)
+for x in range(1,25,1):
+    sky = arcade.load_texture(path_to_string('gfx', 'sky'+str(x)+'.png'))
+    dynamic_background_sky_by_hour.append(sky)
 
 # SEA
 sea = arcade.load_texture(path_to_string('gfx', 'bg_see.png'))

@@ -85,9 +85,6 @@ class MenuView(arcade.View):
                                                      res_width=self.window.width,
                                                      res_height=self.window.height)
 
-    def on_show(self):
-        self.background.on_show()
-
     def on_update(self, delta_time: float):
         self.background.on_update()
         self.button_start.detect_mouse(self.window.cursor)
@@ -126,9 +123,6 @@ class StartGame(arcade.View):
                                                    texture_hover=entities.button_textures['restart'+str(slot)+'_hover'])
             self.slot_buttons.append(_slot_button)
             self.slot_buttons_restart.append(_slot_restart_button)
-
-    def on_show(self):
-        self.background.on_show()
 
     def on_update(self, delta_time: float):
         self.background.on_update()
@@ -170,12 +164,6 @@ class GameView(arcade.View):
         self.fps_start_timer = None
         self.fps = None
 
-    def update_sky(self):
-        self.background.update_hour(int(self.sun_time) // 60)
-
-    def on_show(self):
-        self.background.on_show()
-
     def on_draw(self):
         # Start timing how long this takes
         draw_start_time = timeit.default_timer()
@@ -211,7 +199,9 @@ class GameView(arcade.View):
 
     def on_update(self, delta_time):
         self.time_taken += delta_time
+        self.sun_time += delta_time
         self.background.on_update()
+        self.background.update_hour(int(self.sun_time) // 60)
 
     def on_key_press(self, key, _modifiers):
         if key == arcade.key.ESCAPE:
@@ -237,9 +227,6 @@ class PauseView(arcade.View):
                                            width=200, height=50,
                                            texture_idle=entities.button_textures['exit'],
                                            texture_hover=entities.button_textures['exit_hover'])
-
-    def on_show(self):
-        self.background.on_show()
 
     def on_update(self, delta_time: float):
         self.button_resume.detect_mouse(self.window.cursor)
@@ -268,9 +255,6 @@ class GameOverView(arcade.View):
         super().__init__()
         self.background = background
         self.time_taken = 0
-
-    def on_show(self):
-        self.background.on_show()
 
     def on_draw(self):
         arcade.start_render()
