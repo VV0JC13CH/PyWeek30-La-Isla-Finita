@@ -161,6 +161,7 @@ class GameView(arcade.View):
         super().__init__()
         self.background = background
         self.time_taken = 0
+        self.sun_time = 840
 
         # Developer mode
         self.processing_time = 0
@@ -204,7 +205,9 @@ class GameView(arcade.View):
 
     def on_update(self, delta_time):
         self.time_taken += delta_time
+        self.sun_time += delta_time
         self.background.on_update()
+        self.background.update_hour(int(self.sun_time) // 60)
 
     def on_key_press(self, key, _modifiers):
         if key == arcade.key.ESCAPE:

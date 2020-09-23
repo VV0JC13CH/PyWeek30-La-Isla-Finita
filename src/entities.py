@@ -76,13 +76,12 @@ class DynamicBackground(Entity):
         self.height = height
         self.res_width = res_width
         self.res_height = res_height
-        self.counter = 0
-        self.sky = arcade.SpriteList()
-        self.sea = arcade.SpriteList()
-        self.sky.append(assets.game_sky)
-        self.sea.append(assets.sea)
+        self.sky = assets.dynamic_background_sky_by_hour
+        self.sea = assets.sea
         self.frames_of_bg = assets.dynamic_background_frames
         self.frame = 0
+        self.previous_delta = 0
+        self.game_hour = 14
         self.current_frame = 0
         self.speed_of_Frames = 0.09
         self.append(self.frames_of_bg[0])
@@ -91,20 +90,11 @@ class DynamicBackground(Entity):
             sprite.center_y = self.y
             sprite.width = self.width
             sprite.height = self.height
-        for sprite in self.sky:
-            sprite.center_x = self.x
-            sprite.center_y = self.y+self.y/2
-            sprite.width = self.res_width
-            sprite.height = self.res_height/2
-        for sprite in self.sea:
-            sprite.center_x = self.x
-            sprite.center_y = self.y/2
-            sprite.width = self.res_width
-            sprite.height = self.res_height/2
 
     def draw_sea_and_sky(self):
-        self.sky.draw()
-        self.sea.draw()
+        arcade.draw_lrwh_rectangle_textured(0, self.res_height/2, self.res_width, self.res_height,
+                                            self.sky[int(self.game_hour)])
+        arcade.draw_lrwh_rectangle_textured(0, 0, self.res_width, self.res_height/2, self.sea)
 
     def on_draw(self):
         self.draw_sea_and_sky()
@@ -126,6 +116,10 @@ class DynamicBackground(Entity):
         else:
             self.current_frame = 0
             self.frame = 0
+
+    def update_hour(self, minute_of_game):
+        self.game_hour = int(minute_of_game) % 24
+        print(minute_of_game, self.game_hour)
 
 
 class Button(Entity):
