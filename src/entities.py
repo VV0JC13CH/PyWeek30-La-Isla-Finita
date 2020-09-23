@@ -76,6 +76,7 @@ class DynamicBackground(Entity):
         self.height = height
         self.res_width = res_width
         self.res_height = res_height
+        self.is_static = True
         self.sky = assets.dynamic_background_sky_by_hour
         self.sea = assets.sea
         self.frames_of_bg = assets.dynamic_background_frames
@@ -91,13 +92,17 @@ class DynamicBackground(Entity):
             sprite.width = self.width
             sprite.height = self.height
 
-    def draw_sea_and_sky(self):
-        arcade.draw_lrwh_rectangle_textured(0, self.res_height/2, self.res_width, self.res_height,
-                                            self.sky[int(self.game_hour)])
+    def draw_sky(self):
+        arcade.set_background_color(self.sky[int(self.game_hour)])
+
+    def draw_sea(self):
         arcade.draw_lrwh_rectangle_textured(0, 0, self.res_width, self.res_height/2, self.sea)
 
+    def on_show(self):
+        self.draw_sky()
+
     def on_draw(self):
-        self.draw_sea_and_sky()
+        self.draw_sea()
         self.draw()
 
     def change_frame(self, frame):
@@ -117,9 +122,8 @@ class DynamicBackground(Entity):
             self.current_frame = 0
             self.frame = 0
 
-    def update_hour(self, minute_of_game):
-        self.game_hour = int(minute_of_game) % 24
-        print(minute_of_game, self.game_hour)
+    def update_hour(self, current_stage):
+        self.game_hour = (int(current_stage)) % 24
 
 
 class Button(Entity):
