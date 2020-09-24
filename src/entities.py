@@ -53,17 +53,12 @@ class Hero(arcade.SpriteList):
         self.angle = 0
 
     def change_position(self, dx, dy):
-        for sprites_group in self.hero_all:
-            for direction_group in sprites_group:
-                for sprite in direction_group:
-                    sprite.change_x = dx
-                    sprite.change_y = dy
+        for sprite in self:
+            sprite.change_x = dx
+            sprite.change_y = dy
 
     # Giving parameters to next sprites
     def change_state(self, state):
-        current_angle = self.angle
-        current_center_x = self.center_x
-        current_center_y = self.center_y
         if self.facing_left:
             left = 1
         else:
