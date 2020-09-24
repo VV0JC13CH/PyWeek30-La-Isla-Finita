@@ -2,20 +2,136 @@ import arcade
 import assets
 # time for sounds purposes:
 import time
+# math for hero angle
+import numpy
 
-# Textures
 intro_team = assets.intro_authors
-
-# Music
-music_list = [assets.track01,
-              assets.track02]
-
-
 
 
 class Entity(arcade.SpriteList):
     def __init__(self):
         super().__init__()
+
+
+class Hero(arcade.SpriteList):
+    def __init__(self, start_x, start_y):
+        super().__init__()
+        # Sprites lists, last zero means = right, one means left
+        self.hero_bottom_idle = assets.hero_bottom_idle
+        self.hero_bottom_run = assets.hero_bottom_run
+        self.hero_bottom_throw = assets.hero_bottom_throw
+        self.hero_top_idle = assets.hero_top_idle
+        self.hero_top_run = assets.hero_top_run
+        self.hero_top_throw = assets.hero_top_throw
+        self.hero_die = assets.hero_die
+        self.hero_all = assets.hero_all
+        # Starting sprites
+        self.append(self.hero_top_idle[0][0])
+        self.append(self.hero_bottom_idle[0][0])
+        # Idle[0], run[1] throw[2]
+        self.hero_top = assets.hero_top[0]
+        self.hero_bottom = assets.hero_bottom
+        # Actions
+        self.current_state = 'idle'
+        # Position/Motion:
+        self.center_x = start_x
+        self.center_y = start_y
+        for sprites_group in self.hero_all:
+            for direction_group in sprites_group:
+                for sprite in direction_group:
+                    sprite.center_x = self.center_x
+                    sprite.center_y = self.center_y
+        self.change_x = 0
+        self.change_y = 0
+        self.movement_speed = 7
+        self.update_per_frame = 7
+        self.facing_left = False
+
+        # Mouse interaction
+        self.throw_at_x = 0
+        self.throw_at_y = 0
+        self.angle = 0
+
+    def change_position(self, dx, dy):
+        for sprites_group in self.hero_all:
+            for direction_group in sprites_group:
+                for sprite in direction_group:
+                    sprite.change_x = dx
+                    sprite.change_y = dy
+
+    # Giving parameters to next sprites
+    def change_state(self, state):
+        current_angle = self.angle
+        current_center_x = self.center_x
+        current_center_y = self.center_y
+        if self.facing_left:
+            left = 1
+        else:
+            left = 0
+        self.sprite_list.clear()
+        if state == 'run':
+            self.append(self.hero_top_run[0][left])
+            self.append(self.hero_bottom_run[0][left])
+        elif state == 'throw':
+            self.append(self.hero_top_throw[0][left])
+            self.append(self.hero_bottom_throw[0][left])
+        elif state == 'idle':
+            self.append(self.hero_top_idle[0][left])
+            self.append(self.hero_bottom_idle[0][left])
+        elif state == 'die':
+            self.append(self.hero_die[0])
+
+    def flip_horizontaly(self, mouse_x):
+        if mouse_x < self.center_x:
+            self.facing_left = True
+        else:
+            self.facing_left = False
+
+    def get_angle(self, mouse_x, mouse_y):
+        self.throw_at_x = mouse_x
+        self.throw_at_y = mouse_y
+        p0 = [mouse_x, mouse_y]
+        p1 = [self.center_x, self.center_y]
+        p2 = [mouse_x, self.center_y]
+        v0 = numpy.array(p0) - numpy.array(p1)
+        v1 = numpy.array(p2) - numpy.array(p1)
+        self.angle = numpy.degrees(numpy.math.atan2(numpy.linalg.det([v0, v1]), numpy.dot(v0, v1)))
+        return self.angle
+
+    def update_on(self, state='idle'):
+        self.change_state(state)
+
+    def update_hero_angle(self, mouse_x, mouse_y):
+        angle = self.get_angle(mouse_x, mouse_y)
+        if int(abs(angle)) in range(0,16):
+            for sprite_group in self.hero_top:
+                for sprite in sprite_group:
+                    sprite.angle = -float(angle)
+
+    def on_key_press(self, key):
+        """
+        Called whenever a key is pressed.
+        """
+        if key == arcade.key.UP:
+            self.change_y = self.movement_speed
+        elif key == arcade.key.DOWN:
+            self.change_y = -self.movement_speed
+        elif key == arcade.key.LEFT:
+            self.change_x = -self.movement_speed
+        elif key == arcade.key.RIGHT:
+            self.change_x = self.movement_speed
+        self.change_position(self.change_x, self.change_y)
+
+    def on_key_release(self, key):
+        """
+        Called when the user releases a key.
+        """
+        if key == arcade.key.UP or key == arcade.key.DOWN:
+            self.change_y = 0
+        elif key == arcade.key.LEFT or key == arcade.key.RIGHT:
+            self.change_x = 0
+        self.change_position(self.change_x, self.change_y)
+
 
 
 class Cursor(arcade.SpriteList):
@@ -98,7 +214,6 @@ class DynamicBackground(Entity):
 
     def update_hour(self, minute_of_game):
         self.game_hour = int(minute_of_game) % 24
-        print(minute_of_game, self.game_hour)
 
 
 class Button(Entity):

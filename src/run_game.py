@@ -153,61 +153,117 @@ class StartGame(arcade.View):
 class GameView(arcade.View):
     def __init__(self, background):
         super().__init__()
+        # Environment
         self.background = background
         self.time_taken = 0
         self.sun_time = 840
+        # Gameplay
+        self.stage = 1
+        # Hero
+        self.hero = entities.Hero(self.window.width/2, self.window.height/2)
+        self.hero_action = 'idle'
 
         # Developer mode
+        self.developer_mode = SET_DEVELOPER
         self.processing_time = 0
+        self.draw_start_time = 0
         self.draw_time = 0
         self.frame_count = 0
         self.fps_start_timer = None
         self.fps = None
 
-    def on_draw(self):
-        # Start timing how long this takes
-        draw_start_time = timeit.default_timer()
-        if self.frame_count % 60 == 0:
-            if self.fps_start_timer is not None:
-                total_time = timeit.default_timer() - self.fps_start_timer
-                self.fps = 60 / total_time
-            self.fps_start_timer = timeit.default_timer()
-        self.frame_count += 1
-        arcade.start_render()
-        self.background.on_draw()
-        # Display timings
-        output = f"Processing time: {self.processing_time:.3f}"
-        arcade.draw_text(output, 20, self.window.height - 20, arcade.color.BLACK, 16)
+    def developer_mode_pre_render(self):
+        if self.developer_mode:
+            # Start timing how long this takes
+            self.draw_start_time = timeit.default_timer()
+            if self.frame_count % 60 == 0:
+                if self.fps_start_timer is not None:
+                    total_time = timeit.default_timer() - self.fps_start_timer
+                    self.fps = 60 / total_time
+                self.fps_start_timer = timeit.default_timer()
+            self.frame_count += 1
 
-        output = f"Drawing time: {self.draw_time:.3f}"
-        arcade.draw_text(output, 20, self.window.height - 40, arcade.color.BLACK, 16)
+    def developer_mode_post_render(self):
+        if self.developer_mode:
+            # Display timings
+            output = f"Processing time: {self.processing_time:.3f}"
+            arcade.draw_text(output, 20, self.window.height - 20, arcade.color.BLACK, 16)
 
-        # Calculate time
-        minutes = int(self.time_taken) // 60
-        seconds = int(self.time_taken) % 60
-        time_output = f"Time: {minutes:02d}:{seconds:02d}"
+            output = f"Drawing time: {self.draw_time:.3f}"
+            arcade.draw_text(output, 20, self.window.height - 40, arcade.color.BLACK, 16)
 
-        # Output the timer text.
-        arcade.draw_text(time_output, 20, self.window.height - 60, arcade.color.BLACK, 16)
+            # Calculate time
+            minutes = int(self.time_taken) // 60
+            seconds = int(self.time_taken) % 60
+            time_output = f"Time: {minutes:02d}:{seconds:02d}"
 
-        if self.fps is not None:
-            output = f"FPS: {self.fps:.0f}"
-            arcade.draw_text(output, 20, self.window.height - 80, arcade.color.BLACK, 16)
+            # Output the timer text.
+            arcade.draw_text(time_output, 20, self.window.height - 60, arcade.color.BLACK, 16)
+
+            if self.fps is not None:
+                output = f"FPS: {self.fps:.0f}"
+                arcade.draw_text(output, 20, self.window.height - 80, arcade.color.BLACK, 16)
 
         # Below code has to be at the end of rendering
-        self.draw_time = timeit.default_timer() - draw_start_time
+            self.draw_time = timeit.default_timer() - self.draw_start_time
+
+    def on_draw(self):
+        if self.developer_mode:
+            self.developer_mode_pre_render()
+
+        arcade.start_render()
+        self.background.on_draw()
+
+        self.hero.draw()
+
+        if self.developer_mode:
+            self.developer_mode_post_render()
 
     def on_update(self, delta_time):
         self.time_taken += delta_time
         self.sun_time += delta_time
+
+        self.hero.update()
+        self.hero.update_animation()
+
+        # Custom behaviour (states, actions etc.)
+
+        self.hero.update_on(state=self.hero_action)
+
         self.background.on_update()
         self.background.update_hour(int(self.sun_time) // 60)
+
+    def on_mouse_motion(self, x: float, y: float, dx: float, dy: float):
+
+        # Hero:
+        self.hero.flip_horizontaly(mouse_x=x)
+        self.hero.update_hero_angle(x, y)
 
     def on_key_press(self, key, _modifiers):
         if key == arcade.key.ESCAPE:
             # pass self, the current view, to preserve this view's state
             pause = PauseView(paused_game_state=self, background=self.background)
             self.window.show_view(pause)
+        if key == arcade.key.TAB:
+            # pass self, the current view, to preserve this view's state
+            if self.developer_mode:
+                self.developer_mode = False
+            else:
+                self.developer_mode = True
+        if self.developer_mode:
+            if key == arcade.key.H:
+                self.hero_action = 'idle'
+            if key == arcade.key.J:
+                self.hero_action = 'run'
+            if key == arcade.key.K:
+                self.hero_action = 'throw'
+            if key == arcade.key.L:
+                self.hero_action = 'die'
+
+        self.hero.on_key_press(key)
+
+    def on_key_release(self, key, _modifiers):
+        self.hero.on_key_release(key)
 
 
 class PauseView(arcade.View):
@@ -323,7 +379,7 @@ class Island(arcade.Window):
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
-        if key == arcade.key.F:
+        if key == arcade.key.P:
             # User hits f. Flip between full and not full screen.
             self.set_fullscreen(not self.fullscreen)
 
@@ -332,7 +388,7 @@ class Island(arcade.Window):
             width, height = self.get_size()
             self.set_viewport(0, width, 0, height)
 
-        if key == arcade.key.S:
+        if key == arcade.key.O:
             # User hits s. Flip between full and not full screen.
             self.set_fullscreen(not self.fullscreen)
 
