@@ -75,18 +75,15 @@ class MenuView(arcade.View):
         super().__init__()
         self.button_start = entities.Button(x=self.window.width/2, y=self.window.height*2/6,
                                             width=200, height=50,
-                                            texture_idle=entities.button_textures['start'],
-                                            texture_hover=entities.button_textures['start_hover'])
+                                            texture_idle='start',
+                                            texture_hover='start_hover')
         self.button_exit = entities.Button(x=self.window.width / 2, y=self.window.height*1/6,
                                            width=200, height=50,
-                                           texture_idle=entities.button_textures['exit'],
-                                           texture_hover=entities.button_textures['exit_hover'])
+                                           texture_idle='exit',
+                                           texture_hover='exit_hover')
         self.background = entities.DynamicBackground(x=self.window.width/2, y=self.window.height/2,
                                                      res_width=self.window.width,
                                                      res_height=self.window.height)
-
-    def on_show(self):
-        self.background.on_show()
 
     def on_update(self, delta_time: float):
         self.background.on_update()
@@ -118,17 +115,14 @@ class StartGame(arcade.View):
         for slot in range(1, SET_SAVE_SLOTS+1):
             _slot_button = entities.Button(x=self.margin*slot, y=self.window.height/3,
                                            width=150, height=35,
-                                           texture_idle=entities.button_textures['slot'+str(slot)],
-                                           texture_hover=entities.button_textures['slot'+str(slot)+'_hover'])
+                                           texture_idle='slot'+str(slot),
+                                           texture_hover='slot'+str(slot)+'_hover')
             _slot_restart_button = entities.Button(x=self.margin*slot, y=self.window.height/4,
                                                    width=150, height=35,
-                                                   texture_idle=entities.button_textures['restart'+str(slot)],
-                                                   texture_hover=entities.button_textures['restart'+str(slot)+'_hover'])
+                                                   texture_idle='restart'+str(slot),
+                                                   texture_hover='restart'+str(slot)+'_hover')
             self.slot_buttons.append(_slot_button)
             self.slot_buttons_restart.append(_slot_restart_button)
-
-    def on_show(self):
-        self.background.on_show()
 
     def on_update(self, delta_time: float):
         self.background.on_update()
@@ -159,65 +153,120 @@ class StartGame(arcade.View):
 class GameView(arcade.View):
     def __init__(self, background):
         super().__init__()
+        # Environment
         self.background = background
         self.time_taken = 0
         self.sun_time = 840
+        # Gameplay
+        self.stage = 1
+        # Hero
+        self.hero = entities.Hero(self.window.width/2, self.window.height*0.42)
+        self.hero_action = 'idle'
 
         # Developer mode
+        self.developer_mode = SET_DEVELOPER
         self.processing_time = 0
+        self.draw_start_time = 0
         self.draw_time = 0
         self.frame_count = 0
         self.fps_start_timer = None
         self.fps = None
 
-    def update_sky(self):
-        self.background.update_hour(int(self.sun_time) // 60)
+    def developer_mode_pre_render(self):
+        if self.developer_mode:
+            # Start timing how long this takes
+            self.draw_start_time = timeit.default_timer()
+            if self.frame_count % 60 == 0:
+                if self.fps_start_timer is not None:
+                    total_time = timeit.default_timer() - self.fps_start_timer
+                    self.fps = 60 / total_time
+                self.fps_start_timer = timeit.default_timer()
+            self.frame_count += 1
 
-    def on_show(self):
-        self.background.on_show()
+    def developer_mode_post_render(self):
+        if self.developer_mode:
+            # Display timings
+            output = f"Processing time: {self.processing_time:.3f}"
+            arcade.draw_text(output, 20, self.window.height - 20, arcade.color.BLACK, 16)
 
-    def on_draw(self):
-        # Start timing how long this takes
-        draw_start_time = timeit.default_timer()
-        if self.frame_count % 60 == 0:
-            if self.fps_start_timer is not None:
-                total_time = timeit.default_timer() - self.fps_start_timer
-                self.fps = 60 / total_time
-            self.fps_start_timer = timeit.default_timer()
-        self.frame_count += 1
-        arcade.start_render()
-        self.background.on_draw()
-        # Display timings
-        output = f"Processing time: {self.processing_time:.3f}"
-        arcade.draw_text(output, 20, self.window.height - 20, arcade.color.BLACK, 16)
+            output = f"Drawing time: {self.draw_time:.3f}"
+            arcade.draw_text(output, 20, self.window.height - 40, arcade.color.BLACK, 16)
 
-        output = f"Drawing time: {self.draw_time:.3f}"
-        arcade.draw_text(output, 20, self.window.height - 40, arcade.color.BLACK, 16)
+            # Calculate time
+            minutes = int(self.time_taken) // 60
+            seconds = int(self.time_taken) % 60
+            time_output = f"Time: {minutes:02d}:{seconds:02d}"
 
-        # Calculate time
-        minutes = int(self.time_taken) // 60
-        seconds = int(self.time_taken) % 60
-        time_output = f"Time: {minutes:02d}:{seconds:02d}"
+            # Output the timer text.
+            arcade.draw_text(time_output, 20, self.window.height - 60, arcade.color.BLACK, 16)
 
-        # Output the timer text.
-        arcade.draw_text(time_output, 20, self.window.height - 60, arcade.color.BLACK, 16)
-
-        if self.fps is not None:
-            output = f"FPS: {self.fps:.0f}"
-            arcade.draw_text(output, 20, self.window.height - 80, arcade.color.BLACK, 16)
+            if self.fps is not None:
+                output = f"FPS: {self.fps:.0f}"
+                arcade.draw_text(output, 20, self.window.height - 80, arcade.color.BLACK, 16)
 
         # Below code has to be at the end of rendering
-        self.draw_time = timeit.default_timer() - draw_start_time
+            self.draw_time = timeit.default_timer() - self.draw_start_time
+
+    def on_draw(self):
+        if self.developer_mode:
+            self.developer_mode_pre_render()
+
+        arcade.start_render()
+        self.background.on_draw()
+
+        self.hero.draw()
+
+        if self.developer_mode:
+            self.developer_mode_post_render()
 
     def on_update(self, delta_time):
         self.time_taken += delta_time
+        self.sun_time += delta_time
+
+        self.hero.update()
+        self.hero.update_animation()
+
         self.background.on_update()
+        self.background.update_hour(int(self.sun_time) // 60)
+
+    def on_mouse_motion(self, x: float, y: float, dx: float, dy: float):
+
+        # Hero:
+        self.hero.flip_horizontaly(mouse_x=x)
+        self.hero.update_hero_angle(x, y)
 
     def on_key_press(self, key, _modifiers):
         if key == arcade.key.ESCAPE:
             # pass self, the current view, to preserve this view's state
             pause = PauseView(paused_game_state=self, background=self.background)
             self.window.show_view(pause)
+        if key == arcade.key.TAB:
+            # pass self, the current view, to preserve this view's state
+            if self.developer_mode:
+                self.developer_mode = False
+            else:
+                self.developer_mode = True
+        if self.developer_mode:
+            if key == arcade.key.H:
+                self.hero.change_state('idle')
+            if key == arcade.key.J:
+                self.hero.change_state('run')
+            if key == arcade.key.K:
+                self.hero.change_state('throw')
+            if key == arcade.key.L:
+                self.hero.change_state('die')
+
+        self.hero.on_key_press(key)
+
+    def on_key_release(self, key, _modifiers):
+        self.hero.on_key_release(key)
+
+    def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
+        if self.hero.has_coco:
+            self.hero.change_state(state='throw')
+
+    def on_mouse_release(self, x: float, y: float, button: int, modifiers: int):
+        pass
 
 
 class PauseView(arcade.View):
@@ -227,19 +276,16 @@ class PauseView(arcade.View):
         self.paused_game_state = paused_game_state
         self.button_resume = entities.Button(x=self.window.width/2, y=self.window.height*3/6,
                                              width=200, height=50,
-                                             texture_idle=entities.button_textures['resume'],
-                                             texture_hover=entities.button_textures['resume_hover'])
+                                             texture_idle='resume',
+                                             texture_hover='resume_hover')
         self.button_menu = entities.Button(x=self.window.width/2, y=self.window.height*2/6,
                                            width=200, height=50,
-                                           texture_idle=entities.button_textures['menu'],
-                                           texture_hover=entities.button_textures['menu_hover'])
+                                           texture_idle='menu',
+                                           texture_hover='menu_hover')
         self.button_exit = entities.Button(x=self.window.width / 2, y=self.window.height*1/6,
                                            width=200, height=50,
-                                           texture_idle=entities.button_textures['exit'],
-                                           texture_hover=entities.button_textures['exit_hover'])
-
-    def on_show(self):
-        self.background.on_show()
+                                           texture_idle='exit',
+                                           texture_hover='exit_hover')
 
     def on_update(self, delta_time: float):
         self.button_resume.detect_mouse(self.window.cursor)
@@ -268,9 +314,6 @@ class GameOverView(arcade.View):
         super().__init__()
         self.background = background
         self.time_taken = 0
-
-    def on_show(self):
-        self.background.on_show()
 
     def on_draw(self):
         arcade.start_render()
@@ -339,23 +382,24 @@ class Island(arcade.Window):
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
-        if key == arcade.key.F:
-            # User hits f. Flip between full and not full screen.
-            self.set_fullscreen(not self.fullscreen)
+        if SET_DEVELOPER:
+            if key == arcade.key.P:
+                # User hits f. Flip between full and not full screen.
+                self.set_fullscreen(not self.fullscreen)
 
-            # Get the window coordinates. Match viewport to window coordinates
-            # so there is a one-to-one mapping.
-            width, height = self.get_size()
-            self.set_viewport(0, width, 0, height)
+                # Get the window coordinates. Match viewport to window coordinates
+                # so there is a one-to-one mapping.
+                width, height = self.get_size()
+                self.set_viewport(0, width, 0, height)
 
-        if key == arcade.key.S:
-            # User hits s. Flip between full and not full screen.
-            self.set_fullscreen(not self.fullscreen)
+            if key == arcade.key.O:
+                # User hits s. Flip between full and not full screen.
+                self.set_fullscreen(not self.fullscreen)
 
-            # Instead of a one-to-one mapping, stretch/squash window to match the
-            # constants. This does NOT respect aspect ratio. You'd need to
-            # do a bit of math for that.
-            self.set_viewport(0, SET_WIDTH, 0, SET_HEIGHT)
+                # Instead of a one-to-one mapping, stretch/squash window to match the
+                # constants. This does NOT respect aspect ratio. You'd need to
+                # do a bit of math for that.
+                self.set_viewport(0, SET_WIDTH, 0, SET_HEIGHT)
 
     def on_draw(self):
         # Draw all the sprites.

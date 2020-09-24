@@ -1,3 +1,10 @@
 Files: ui_button_png, ui_button_hover.png
 License: CC0 1.0 Universal
 Source: https://www.kenney.nl/assets/ui-pack
+
+Files: hero*.png
+Based_on: Royalty-Free Vector Image
+License: Custom Royalty Free (Electronic copies: Unlimited; Online Usage: Unlimited)
+Author: Homoerectuss
+Source: https://www.dreamstime.com
+ITEM_ID: 105225218

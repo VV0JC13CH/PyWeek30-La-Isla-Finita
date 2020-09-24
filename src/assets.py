@@ -3,13 +3,13 @@ import arcade
 from pathlib import Path
 
 UI_SCALING = 0.5
-BG_SCALING = 1
+BG_SCALING = 0.5
 SKY_SCALING = 1
+UNIT_SCALING = 1
 
 
 def path_to_string(directory, file):
     return str(Path.cwd().joinpath(directory, file).resolve())
-
 
 # INTRO
 intro_authors = arcade.load_texture(path_to_string('gfx', 'intro_team_white.png'))
@@ -45,43 +45,95 @@ button_slot3_hover = arcade.Sprite(path_to_string('gfx', 'ui_button_slot3_hover.
 button_menu_idle = arcade.Sprite(path_to_string('gfx', 'ui_button_menu.png'), UI_SCALING)
 button_menu_hover = arcade.Sprite(path_to_string('gfx', 'ui_button_menu_hover.png'), UI_SCALING)
 
+button_textures = {"start": button_start_idle,
+                   "start_hover": button_start_hover,
+                   "exit": button_exit_idle,
+                   "exit_hover": button_exit_hover,
+                   "resume": button_resume_idle,
+                   "resume_hover": button_resume_hover,
+                   "restart": button_restart_idle,
+                   "restart_hover": button_restart_hover,
+                   "slot1": button_slot1_idle,
+                   "slot1_hover": button_slot1_hover,
+                   "restart1": button_restart1_idle,
+                   "restart1_hover": button_restart1_hover,
+                   "slot2": button_slot2_idle,
+                   "slot2_hover": button_slot2_hover,
+                   "restart2": button_restart2_idle,
+                   "restart2_hover": button_restart2_hover,
+                   "slot3": button_slot3_idle,
+                   "slot3_hover": button_slot3_hover,
+                   "restart3": button_restart3_idle,
+                   "restart3_hover": button_restart3_hover,
+                   "menu": button_menu_idle,
+                   "menu_hover": button_menu_hover
+}
+
 # BACKGROUND
 dynamic_background_frames = []
-dynamic_background_sky_by_hour = [
-    (14, 14, 14),
-    (1, 25, 52),
-    (2, 33, 61),
-    (2, 40, 67),
-    (2, 43, 72),
-    (3, 52, 78),
-    (11, 69, 101),
-    (20, 109, 137),
-    (60, 161, 178),
-    (149, 218, 200),
-    (195, 222, 160),
-    (239, 221, 129),
-    (254, 207, 113),
-    (253, 205, 107),
-    (253, 202, 106),
-    (249, 182, 98),
-    (227, 121, 122),
-    (166, 80, 135),
-    (92, 48, 126),
-    (58, 33, 116),
-    (44, 37, 107),
-    (25, 36, 93),
-    (4, 29, 77),
-    (1, 25, 52),
-]
+dynamic_background_sky_by_hour = []
+
 for x in range(1,7,1):
     background = arcade.Sprite(path_to_string('gfx', 'bg_full_island'+str(x)+'.png'), BG_SCALING)
     dynamic_background_frames.append(background)
+for x in range(1,25,1):
+    sky = arcade.load_texture(path_to_string('gfx', 'sky'+str(x)+'.png'))
+    dynamic_background_sky_by_hour.append(sky)
+
 
 # SEA
 sea = arcade.load_texture(path_to_string('gfx', 'bg_see.png'))
 
+# Hero
+hero_bottom_idle = []
+hero_bottom_run = []
+hero_bottom_throw = []
+hero_top_idle = []
+hero_top_run = []
+hero_top_throw = []
+hero_die = []
+hero_top = (hero_top_idle, hero_top_run, hero_top_throw)
+hero_bottom = (hero_bottom_idle, hero_bottom_run, hero_bottom_throw)
+hero_all = (hero_top_idle, hero_top_run, hero_top_throw, hero_bottom_idle, hero_bottom_run, hero_bottom_throw)
 
-# SFX
+
+# Idle 2 frames
+for x in range(1,3,1):
+    _hero_bottom_idle = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_idle'+str(x)+'.png'))
+    _hero_bottom_idle_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_idle'+str(x)+'.png'),
+                                                 flipped_horizontally=True)
+    hero_bottom_idle.append((_hero_bottom_idle, _hero_bottom_idle_left,))
+    _hero_top_idle = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_idle'+str(x)+'.png'))
+    _hero_top_idle_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_idle'+str(x)+'.png'),
+                                              flipped_horizontally=True)
+    hero_top_idle.append((_hero_top_idle, _hero_top_idle_left))
+
+# Run 4 frames
+for x in range(1,5,1):
+    _hero_bottom_run = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_run'+str(x)+'.png'))
+    _hero_bottom_run_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_run'+str(x)+'.png'),
+                                                flipped_horizontally=True)
+    hero_bottom_run.append((_hero_bottom_run, _hero_bottom_run_left))
+    _hero_top_run = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_run'+str(x)+'.png'))
+    _hero_top_run_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_run'+str(x)+'.png'),
+                                             flipped_horizontally=True)
+    hero_top_run.append((_hero_top_run, _hero_top_run_left))
+
+# Throw 3 frames
+for x in range(1,4,1):
+    _hero_bottom_throw = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_throw'+str(x)+'.png'))
+    _hero_bottom_throw_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_throw'+str(x)+'.png'),
+                                                  flipped_horizontally=True)
+    hero_bottom_throw.append((_hero_bottom_throw, _hero_bottom_throw_left))
+    _hero_top_throw = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_throw'+str(x)+'.png'))
+    _hero_top_throw_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_throw'+str(x)+'.png'),
+                                               flipped_horizontally=True)
+    hero_top_throw.append((_hero_top_throw, _hero_top_throw_left))
+
+# DIE 6 frames
+for x in range(1,7,1):
+    _hero_die = arcade.load_texture(file_name=path_to_string('gfx', 'hero_die'+str(x)+'.png'))
+    hero_die.append(_hero_die)
 
 # MUSIC
 track01 = path_to_string('music', 'track01.mp3')
