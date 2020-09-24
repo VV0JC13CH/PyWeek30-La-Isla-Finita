@@ -75,12 +75,12 @@ class MenuView(arcade.View):
         super().__init__()
         self.button_start = entities.Button(x=self.window.width/2, y=self.window.height*2/6,
                                             width=200, height=50,
-                                            texture_idle=entities.button_textures['start'],
-                                            texture_hover=entities.button_textures['start_hover'])
+                                            texture_idle='start',
+                                            texture_hover='start_hover')
         self.button_exit = entities.Button(x=self.window.width / 2, y=self.window.height*1/6,
                                            width=200, height=50,
-                                           texture_idle=entities.button_textures['exit'],
-                                           texture_hover=entities.button_textures['exit_hover'])
+                                           texture_idle='exit',
+                                           texture_hover='exit_hover')
         self.background = entities.DynamicBackground(x=self.window.width/2, y=self.window.height/2,
                                                      res_width=self.window.width,
                                                      res_height=self.window.height)
@@ -115,12 +115,12 @@ class StartGame(arcade.View):
         for slot in range(1, SET_SAVE_SLOTS+1):
             _slot_button = entities.Button(x=self.margin*slot, y=self.window.height/3,
                                            width=150, height=35,
-                                           texture_idle=entities.button_textures['slot'+str(slot)],
-                                           texture_hover=entities.button_textures['slot'+str(slot)+'_hover'])
+                                           texture_idle='slot'+str(slot),
+                                           texture_hover='slot'+str(slot)+'_hover')
             _slot_restart_button = entities.Button(x=self.margin*slot, y=self.window.height/4,
                                                    width=150, height=35,
-                                                   texture_idle=entities.button_textures['restart'+str(slot)],
-                                                   texture_hover=entities.button_textures['restart'+str(slot)+'_hover'])
+                                                   texture_idle='restart'+str(slot),
+                                                   texture_hover='restart'+str(slot)+'_hover')
             self.slot_buttons.append(_slot_button)
             self.slot_buttons_restart.append(_slot_restart_button)
 
@@ -217,16 +217,16 @@ class PauseView(arcade.View):
         self.paused_game_state = paused_game_state
         self.button_resume = entities.Button(x=self.window.width/2, y=self.window.height*3/6,
                                              width=200, height=50,
-                                             texture_idle=entities.button_textures['resume'],
-                                             texture_hover=entities.button_textures['resume_hover'])
+                                             texture_idle='resume',
+                                             texture_hover='resume_hover')
         self.button_menu = entities.Button(x=self.window.width/2, y=self.window.height*2/6,
                                            width=200, height=50,
-                                           texture_idle=entities.button_textures['menu'],
-                                           texture_hover=entities.button_textures['menu_hover'])
+                                           texture_idle='menu',
+                                           texture_hover='menu_hover')
         self.button_exit = entities.Button(x=self.window.width / 2, y=self.window.height*1/6,
                                            width=200, height=50,
-                                           texture_idle=entities.button_textures['exit'],
-                                           texture_hover=entities.button_textures['exit_hover'])
+                                           texture_idle='exit',
+                                           texture_hover='exit_hover')
 
     def on_update(self, delta_time: float):
         self.button_resume.detect_mouse(self.window.cursor)

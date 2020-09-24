@@ -10,29 +10,7 @@ intro_team = assets.intro_authors
 music_list = [assets.track01,
               assets.track02]
 
-button_textures = {"start": assets.button_start_idle,
-                   "start_hover": assets.button_start_hover,
-                   "exit": assets.button_exit_idle,
-                   "exit_hover": assets.button_exit_hover,
-                   "resume": assets.button_resume_idle,
-                   "resume_hover": assets.button_resume_hover,
-                   "restart": assets.button_restart_idle,
-                   "restart_hover": assets.button_restart_hover,
-                   "slot1": assets.button_slot1_idle,
-                   "slot1_hover": assets.button_slot1_hover,
-                   "restart1": assets.button_restart1_idle,
-                   "restart1_hover": assets.button_restart1_hover,
-                   "slot2": assets.button_slot2_idle,
-                   "slot2_hover": assets.button_slot2_hover,
-                   "restart2": assets.button_restart2_idle,
-                   "restart2_hover": assets.button_restart2_hover,
-                   "slot3": assets.button_slot3_idle,
-                   "slot3_hover": assets.button_slot3_hover,
-                   "restart3": assets.button_restart3_idle,
-                   "restart3_hover": assets.button_restart3_hover,
-                   "menu": assets.button_menu_idle,
-                   "menu_hover": assets.button_menu_hover
-}
+
 
 
 class Entity(arcade.SpriteList):
@@ -126,15 +104,17 @@ class DynamicBackground(Entity):
 class Button(Entity):
     # EVERYTHING IS FREAKING BUTTON IN THIS GAME
     def __init__(self, width=200, height=200, x=200, y=200,
-                 texture_idle=assets.button_idle, texture_hover=assets.button_hover, action='change_scene'):
+                 texture_idle=assets.button_idle, texture_hover=assets.button_hover):
         super().__init__()
         self.x = x
         self.y = y
         self.width = width
         self.height = height
-        self.action = action
-        self.idle = texture_idle
-        self.hover = texture_hover
+
+        self.textures = assets.button_textures
+        self.idle = self.textures[texture_idle]
+        self.hover = self.textures[texture_hover]
+
         self.all_sprites = [self.idle, self.hover]
         self.current_state = 'idle'
         self.append(self.idle)
