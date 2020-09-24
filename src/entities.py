@@ -25,22 +25,24 @@ class Hero(arcade.SpriteList):
         self.hero_top_throw = assets.hero_top_throw
         self.hero_die = assets.hero_die
         self.hero_all = assets.hero_all
+        self.hero_top_textures = assets.hero_top
+        self.hero_bottom_textures = assets.hero_bottom
         # Starting sprites
-        self.append(self.hero_top_idle[0][0])
-        self.append(self.hero_bottom_idle[0][0])
         # Idle[0], run[1] throw[2]
-        self.hero_top = assets.hero_top[0]
-        self.hero_bottom = assets.hero_bottom
+        self.sprite_top = arcade.Sprite()
+        self.sprite_bottom = arcade.Sprite()
+        self.sprite_top.texture = self.hero_top_idle[0][0]
+        self.sprite_bottom.texture = self.hero_top_idle[0][0]
+        self.append(self.sprite_top)
+        self.append(self.sprite_bottom)
         # Actions
         self.current_state = 'idle'
         # Position/Motion:
         self.center_x = start_x
         self.center_y = start_y
-        for sprites_group in self.hero_all:
-            for direction_group in sprites_group:
-                for sprite in direction_group:
-                    sprite.center_x = self.center_x
-                    sprite.center_y = self.center_y
+        for sprite in self.sprite_list:
+            sprite.center_x = self.center_x
+            sprite.center_y = self.center_y
         self.change_x = 0
         self.change_y = 0
         self.movement_speed = 7
@@ -63,18 +65,18 @@ class Hero(arcade.SpriteList):
             left = 1
         else:
             left = 0
-        self.sprite_list.clear()
         if state == 'run':
-            self.append(self.hero_top_run[0][left])
-            self.append(self.hero_bottom_run[0][left])
-        elif state == 'throw':
-            self.append(self.hero_top_throw[0][left])
-            self.append(self.hero_bottom_throw[0][left])
-        elif state == 'idle':
-            self.append(self.hero_top_idle[0][left])
-            self.append(self.hero_bottom_idle[0][left])
-        elif state == 'die':
-            self.append(self.hero_die[0])
+            self.sprite_top.texture = self.hero_top_run[0][left]
+            self.sprite_bottom.texture = self.hero_bottom_run[0][left]
+        if state == 'throw':
+            self.sprite_top.texture = self.hero_top_throw[0][left]
+            self.sprite_bottom.texture = self.hero_bottom_throw[0][left]
+        if state == 'idle':
+            self.sprite_top.texture = self.hero_top_idle[0][left]
+            self.sprite_bottom.texture = self.hero_bottom_idle[0][left]
+        if state == 'die':
+            self.sprite_top.remove_from_sprite_lists()
+            self.sprite_bottom.texture = self.hero_die[0]
 
     def flip_horizontaly(self, mouse_x):
         if mouse_x < self.center_x:
@@ -93,15 +95,13 @@ class Hero(arcade.SpriteList):
         self.angle = numpy.degrees(numpy.math.atan2(numpy.linalg.det([v0, v1]), numpy.dot(v0, v1)))
         return self.angle
 
-    def update_on(self, state='idle'):
+    def update_on(self, state):
         self.change_state(state)
 
     def update_hero_angle(self, mouse_x, mouse_y):
         angle = self.get_angle(mouse_x, mouse_y)
         if int(abs(angle)) in range(0,16):
-            for sprite_group in self.hero_top:
-                for sprite in sprite_group:
-                    sprite.angle = -float(angle)
+            self.sprite_top.angle = -float(angle)
 
     def on_key_press(self, key):
         """

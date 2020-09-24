@@ -96,42 +96,43 @@ hero_top = (hero_top_idle, hero_top_run, hero_top_throw)
 hero_bottom = (hero_bottom_idle, hero_bottom_run, hero_bottom_throw)
 hero_all = (hero_top_idle, hero_top_run, hero_top_throw, hero_bottom_idle, hero_bottom_run, hero_bottom_throw)
 
+
 # Idle 2 frames
 for x in range(1,3,1):
-    _hero_bottom_idle = arcade.Sprite(path_to_string('gfx', 'hero_bottom_idle'+str(x)+'.png'))
-    _hero_bottom_idle_left = arcade.Sprite(path_to_string('gfx', 'hero_bottom_idle'+str(x)+'.png'),
-                                           flipped_horizontally=True)
+    _hero_bottom_idle = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_idle'+str(x)+'.png'))
+    _hero_bottom_idle_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_idle'+str(x)+'.png'),
+                                                 flipped_horizontally=True)
     hero_bottom_idle.append((_hero_bottom_idle, _hero_bottom_idle_left,))
-    _hero_top_idle = arcade.Sprite(path_to_string('gfx', 'hero_top_idle'+str(x)+'.png'))
-    _hero_top_idle_left = arcade.Sprite(path_to_string('gfx', 'hero_top_idle'+str(x)+'.png'),
-                                        flipped_horizontally=True)
+    _hero_top_idle = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_idle'+str(x)+'.png'))
+    _hero_top_idle_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_idle'+str(x)+'.png'),
+                                              flipped_horizontally=True)
     hero_top_idle.append((_hero_top_idle, _hero_top_idle_left))
 
 # Run 4 frames
 for x in range(1,5,1):
-    _hero_bottom_run = arcade.Sprite(path_to_string('gfx', 'hero_bottom_run'+str(x)+'.png'))
-    _hero_bottom_run_left = arcade.Sprite(path_to_string('gfx', 'hero_bottom_run'+str(x)+'.png'),
-                                          flipped_horizontally=True)
+    _hero_bottom_run = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_run'+str(x)+'.png'))
+    _hero_bottom_run_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_run'+str(x)+'.png'),
+                                                flipped_horizontally=True)
     hero_bottom_run.append((_hero_bottom_run, _hero_bottom_run_left))
-    _hero_top_run = arcade.Sprite(path_to_string('gfx', 'hero_top_run'+str(x)+'.png'))
-    _hero_top_run_left = arcade.Sprite(path_to_string('gfx', 'hero_top_run'+str(x)+'.png'),
-                                       flipped_horizontally=True)
+    _hero_top_run = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_run'+str(x)+'.png'))
+    _hero_top_run_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_run'+str(x)+'.png'),
+                                             flipped_horizontally=True)
     hero_top_run.append((_hero_top_run, _hero_top_run_left))
 
 # Throw 3 frames
 for x in range(1,4,1):
-    _hero_bottom_throw = arcade.Sprite(path_to_string('gfx', 'hero_bottom_throw'+str(x)+'.png'))
-    _hero_bottom_throw_left = arcade.Sprite(path_to_string('gfx', 'hero_bottom_throw'+str(x)+'.png'),
-                                            flipped_horizontally=True)
+    _hero_bottom_throw = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_throw'+str(x)+'.png'))
+    _hero_bottom_throw_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_throw'+str(x)+'.png'),
+                                                  flipped_horizontally=True)
     hero_bottom_throw.append((_hero_bottom_throw, _hero_bottom_throw_left))
-    _hero_top_throw = arcade.Sprite(path_to_string('gfx', 'hero_top_throw'+str(x)+'.png'))
-    _hero_top_throw_left = arcade.Sprite(path_to_string('gfx', 'hero_top_throw'+str(x)+'.png'),
-                                         flipped_horizontally=True)
+    _hero_top_throw = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_throw'+str(x)+'.png'))
+    _hero_top_throw_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_throw'+str(x)+'.png'),
+                                               flipped_horizontally=True)
     hero_top_throw.append((_hero_top_throw, _hero_top_throw_left))
 
 # DIE 6 frames
 for x in range(1,4,1):
-    _hero_die = arcade.Sprite(path_to_string('gfx', 'hero_die'+str(x)+'.png'))
+    _hero_die = arcade.load_texture(file_name=path_to_string('gfx', 'hero_die'+str(x)+'.png'))
     hero_die.append(_hero_die)
 
 # MUSIC
