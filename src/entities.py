@@ -4,6 +4,10 @@ import assets
 import time
 # math for hero angle
 import numpy
+# cocos
+import pymunk
+import random
+import math
 
 intro_team = assets.intro_authors
 
@@ -16,7 +20,7 @@ class Entity(arcade.SpriteList):
 class Hero(arcade.SpriteList):
     def __init__(self, start_x, start_y):
         super().__init__()
-        # Sprites lists, last zero means = right, one means left
+        # Sprites lists, last zero means = right, one means left, two coco, 3 left coco
         self.hero_bottom_idle = assets.hero_bottom_idle
         self.hero_bottom_run = assets.hero_bottom_run
         self.hero_bottom_throw = assets.hero_bottom_throw
@@ -30,15 +34,19 @@ class Hero(arcade.SpriteList):
         # Starting sprites
         # Idle[0], run[1] throw[2]
         self.sprite_top = arcade.Sprite()
+        self.sprite_top_coco = arcade.Sprite()
         self.sprite_bottom = arcade.Sprite()
         self.sprite_top.texture = self.hero_top_idle[0][0]
+        self.sprite_top_coco.texture = self.hero_top_idle[0][2]
         self.sprite_bottom.texture = self.hero_top_idle[0][0]
         self.append(self.sprite_top)
         self.append(self.sprite_bottom)
+        self.append(self.sprite_top_coco)
         # Actions
         self.died = False
         self.current_state = 'idle'
-        self.has_coco = True
+        self.has_coco = False
+        self.taken_coco = False
         self.is_throwing = False
         # Frames
         self.current_frame_run = 0
@@ -111,9 +119,15 @@ class Hero(arcade.SpriteList):
                     self.current_frame_die = 0
                     self.died = True
                 self.sprite_top.remove_from_sprite_lists()
+                self.sprite_top_coco.remove_from_sprite_lists()
                 self.sprite_bottom.texture = self.hero_die[self.current_frame_die // self.updates_per_frame_die]
             else:
                 self.sprite_bottom.texture = self.hero_die[5]
+        if not self.has_coco:
+            self.sprite_top_coco.remove_from_sprite_lists()
+        if self.taken_coco:
+            self.has_coco = True
+            self.append(self.sprite_top_coco)
 
     def flip_horizontaly(self, mouse_x):
         if mouse_x < self.center_x:
@@ -136,6 +150,7 @@ class Hero(arcade.SpriteList):
         angle = self.get_angle(mouse_x, mouse_y)
         if int(abs(angle)) in range(0,10):
             self.sprite_top.angle = -float(angle)
+            self.sprite_top_coco.angle = -float(angle)
 
     def on_key_press(self, key):
         """
@@ -162,6 +177,90 @@ class Hero(arcade.SpriteList):
             self.change_x = 0
         self.change_state(state='idle')
         self.change_position(self.change_x, self.change_y)
+
+
+class Coco(arcade.Sprite):
+    def __init__(self, filename, pymunk_shape):
+        super().__init__(filename, center_x=pymunk_shape.body.position.x, center_y=pymunk_shape.body.position.y)
+        self.width = pymunk_shape.radius * 2
+        self.height = pymunk_shape.radius * 2
+        self.pymunk_shape = pymunk_shape
+
+
+class CocoSystem:
+    def __init__(self, screen_width, screen_height, coco_x, coco_y):
+        self.obstacle_list = arcade.SpriteList()
+        self.coco_list: arcade.SpriteList[Coco] = arcade.SpriteList()
+        # -- Pymunk
+        self.space = pymunk.Space()
+        self.space.gravity = (0.0, -900.0)
+        self.static_lines = []
+        self.ticks_to_next_ball = 10
+
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+        self.coco_x = coco_x
+        self.coco_y = coco_y
+
+        # Left side of island
+        body = pymunk.Body(body_type=pymunk.Body.STATIC)
+        shape = pymunk.Segment(body, [screen_width/2-260, screen_height/2-180],
+                               [screen_width/2-190, screen_height/2-100], 0.0)
+        shape.friction = 10
+        self.space.add(shape)
+        self.static_lines.append(shape)
+
+        # Flat side of island
+        body = pymunk.Body(body_type=pymunk.Body.STATIC)
+        shape = pymunk.Segment(body, [screen_width/2-195, screen_height/2-95],
+                               [screen_width/2+195, screen_height/2-95], 0.0)
+        shape.friction = 10
+        self.space.add(shape)
+        self.static_lines.append(shape)
+
+        # Right side of island
+        body = pymunk.Body(body_type=pymunk.Body.STATIC)
+        shape = pymunk.Segment(body, [screen_width/2+190, screen_height/2-100], [screen_width/2+270, screen_height/2-190], 0.0)
+        shape.friction = 10
+        self.space.add(shape)
+        self.static_lines.append(shape)
+
+    def on_draw(self):
+        self.coco_list.draw()
+
+    def on_update(self):
+        self.ticks_to_next_ball -= 1
+        if self.ticks_to_next_ball <= 0:
+            self.ticks_to_next_ball = 20
+            mass = 0.5
+            radius = 15
+            inertia = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
+            body = pymunk.Body(mass, inertia)
+            x = random.randint(0, self.screen_width)
+            y = self.screen_height
+            body.position = x, y
+            shape = pymunk.Circle(body, radius, pymunk.Vec2d(0, 0))
+            shape.friction = 0.3
+            self.space.add(body, shape)
+            sprite = Coco(filename=assets.coco_filename, pymunk_shape=shape)
+            self.coco_list.append(sprite)
+
+        # Check for balls that fall off the screen
+        for coco in self.coco_list:
+            if coco.pymunk_shape.body.position.y < 0:
+                # Remove balls from physics space
+                self.space.remove(coco.pymunk_shape, coco.pymunk_shape.body)
+                # Remove balls from physics list
+                coco.remove_from_sprite_lists()
+
+        self.space.step(1 / 60.0)
+
+        # Move sprites to where physics objects are
+        for coco in self.coco_list:
+            coco.center_x = coco.pymunk_shape.body.position.x
+            coco.center_y = coco.pymunk_shape.body.position.y
+            coco.angle = math.degrees(coco.pymunk_shape.body.angle)
+
 
 class Cursor(arcade.SpriteList):
     def __init__(self):

@@ -106,7 +106,10 @@ for x in range(1,3,1):
     _hero_top_idle = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_idle'+str(x)+'.png'))
     _hero_top_idle_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_idle'+str(x)+'.png'),
                                               flipped_horizontally=True)
-    hero_top_idle.append((_hero_top_idle, _hero_top_idle_left))
+    _hero_top_idle_coco = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_idle_coco'+str(x)+'.png'))
+    _hero_top_idle_coco_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_idle_coco'+str(x)+'.png'),
+                                                   flipped_horizontally=True)
+    hero_top_idle.append((_hero_top_idle, _hero_top_idle_left, _hero_top_idle_coco, _hero_top_idle_coco_left))
 
 # Run 4 frames
 for x in range(1,5,1):
@@ -134,6 +137,9 @@ for x in range(1,4,1):
 for x in range(1,7,1):
     _hero_die = arcade.load_texture(file_name=path_to_string('gfx', 'hero_die'+str(x)+'.png'))
     hero_die.append(_hero_die)
+
+coco_filename = path_to_string('gfx', 'coco.png')
+coco_texture = arcade.load_texture(file_name=coco_filename)
 
 # MUSIC
 track01 = path_to_string('music', 'track01.mp3')

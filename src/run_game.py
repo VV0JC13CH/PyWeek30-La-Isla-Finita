@@ -172,6 +172,10 @@ class GameView(arcade.View):
         self.fps_start_timer = None
         self.fps = None
 
+        #Physic system
+        self.coco_system = entities.CocoSystem(screen_width=self.window.width, screen_height=self.window.height,
+                                               coco_x=self.window.width/2, coco_y=self.window.height/2)
+
     def developer_mode_pre_render(self):
         if self.developer_mode:
             # Start timing how long this takes
@@ -213,6 +217,7 @@ class GameView(arcade.View):
 
         arcade.start_render()
         self.background.on_draw()
+        self.coco_system.on_draw()
 
         self.hero.draw()
 
@@ -225,6 +230,8 @@ class GameView(arcade.View):
 
         self.hero.update()
         self.hero.update_animation()
+
+        self.coco_system.on_update()
 
         self.background.on_update()
         self.background.update_hour(int(self.sun_time) // 60)
