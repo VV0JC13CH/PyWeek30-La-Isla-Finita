@@ -36,7 +36,19 @@ class Hero(arcade.SpriteList):
         self.append(self.sprite_top)
         self.append(self.sprite_bottom)
         # Actions
+        self.died = False
         self.current_state = 'idle'
+        self.has_coco = True
+        self.is_throwing = False
+        # Frames
+        self.current_frame_run = 0
+        self.current_frame_idle = 0
+        self.current_frame_throw = 0
+        self.current_frame_die = 0
+        self.updates_per_frame_run = 8
+        self.updates_per_frame_idle = 40
+        self.updates_per_frame_throw = 16
+        self.updates_per_frame_die = 14
         # Position/Motion:
         self.center_x = start_x
         self.center_y = start_y
@@ -45,8 +57,7 @@ class Hero(arcade.SpriteList):
             sprite.center_y = self.center_y
         self.change_x = 0
         self.change_y = 0
-        self.movement_speed = 7
-        self.update_per_frame = 7
+        self.movement_speed = 1.2
         self.facing_left = False
 
         # Mouse interaction
@@ -55,28 +66,54 @@ class Hero(arcade.SpriteList):
         self.angle = 0
 
     def change_position(self, dx, dy):
-        for sprite in self:
-            sprite.change_x = dx
-            sprite.change_y = dy
+        if not self.died:
+            for sprite in self:
+                sprite.change_x = dx*self.movement_speed
+                sprite.change_y = dy*self.movement_speed
+        else:
+            for sprite in self:
+                sprite.change_x = 0
+                sprite.change_y = 0
 
     # Giving parameters to next sprites
     def change_state(self, state):
+        self.current_state = state
+
+    def update_animation(self, delta_time: float = 1/60):
         if self.facing_left:
             left = 1
         else:
             left = 0
-        if state == 'run':
-            self.sprite_top.texture = self.hero_top_run[0][left]
-            self.sprite_bottom.texture = self.hero_bottom_run[0][left]
-        if state == 'throw':
-            self.sprite_top.texture = self.hero_top_throw[0][left]
-            self.sprite_bottom.texture = self.hero_bottom_throw[0][left]
-        if state == 'idle':
-            self.sprite_top.texture = self.hero_top_idle[0][left]
-            self.sprite_bottom.texture = self.hero_bottom_idle[0][left]
-        if state == 'die':
-            self.sprite_top.remove_from_sprite_lists()
-            self.sprite_bottom.texture = self.hero_die[0]
+        if self.current_state == 'run':
+            self.current_frame_run += 1
+            if self.current_frame_run >= 4 * self.updates_per_frame_run:
+                self.current_frame_run = 0
+            self.sprite_top.texture = self.hero_top_run[self.current_frame_run // self.updates_per_frame_run][left]
+            self.sprite_bottom.texture = self.hero_bottom_run[self.current_frame_run // self.updates_per_frame_run][left]
+        elif self.current_state == 'throw':
+            self.current_frame_throw += 1
+            if self.current_frame_throw >= 3 * self.updates_per_frame_throw:
+                self.has_coco = False
+                self.current_frame_throw = 0
+            self.sprite_top.texture = self.hero_top_throw[self.current_frame_throw // self.updates_per_frame_throw][left]
+            self.sprite_bottom.texture = self.hero_bottom_throw[self.current_frame_throw // self.updates_per_frame_throw][left]
+        elif self.current_state == 'idle':
+            self.current_frame_idle += 1
+            if self.current_frame_idle >= 2 * self.updates_per_frame_idle:
+                self.current_frame_idle = 0
+            self.sprite_top.texture = self.hero_top_idle[self.current_frame_idle // self.updates_per_frame_idle][left]
+            self.sprite_bottom.texture = self.hero_bottom_idle[self.current_frame_idle // self.updates_per_frame_idle][left]
+        elif self.current_state == 'die':
+            if not self.died:
+                self.current_frame_die += 1
+                self.sprite_bottom.angle -= 1
+                if self.current_frame_die >= 6 * self.updates_per_frame_die:
+                    self.current_frame_die = 0
+                    self.died = True
+                self.sprite_top.remove_from_sprite_lists()
+                self.sprite_bottom.texture = self.hero_die[self.current_frame_die // self.updates_per_frame_die]
+            else:
+                self.sprite_bottom.texture = self.hero_die[5]
 
     def flip_horizontaly(self, mouse_x):
         if mouse_x < self.center_x:
@@ -95,39 +132,36 @@ class Hero(arcade.SpriteList):
         self.angle = numpy.degrees(numpy.math.atan2(numpy.linalg.det([v0, v1]), numpy.dot(v0, v1)))
         return self.angle
 
-    def update_on(self, state):
-        self.change_state(state)
-
     def update_hero_angle(self, mouse_x, mouse_y):
         angle = self.get_angle(mouse_x, mouse_y)
-        if int(abs(angle)) in range(0,16):
+        if int(abs(angle)) in range(0,10):
             self.sprite_top.angle = -float(angle)
 
     def on_key_press(self, key):
         """
         Called whenever a key is pressed.
         """
-        if key == arcade.key.UP:
+        if key == arcade.key.W:
             self.change_y = self.movement_speed
-        elif key == arcade.key.DOWN:
+        elif key == arcade.key.S:
             self.change_y = -self.movement_speed
-        elif key == arcade.key.LEFT:
+        elif key == arcade.key.A:
             self.change_x = -self.movement_speed
-        elif key == arcade.key.RIGHT:
+        elif key == arcade.key.D:
             self.change_x = self.movement_speed
+        self.change_state('run')
         self.change_position(self.change_x, self.change_y)
 
     def on_key_release(self, key):
         """
         Called when the user releases a key.
         """
-        if key == arcade.key.UP or key == arcade.key.DOWN:
+        if key == arcade.key.W or key == arcade.key.S:
             self.change_y = 0
-        elif key == arcade.key.LEFT or key == arcade.key.RIGHT:
+        elif key == arcade.key.A or key == arcade.key.D:
             self.change_x = 0
+        self.change_state(state='idle')
         self.change_position(self.change_x, self.change_y)
-
-
 
 class Cursor(arcade.SpriteList):
     def __init__(self):

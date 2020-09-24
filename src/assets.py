@@ -131,7 +131,7 @@ for x in range(1,4,1):
     hero_top_throw.append((_hero_top_throw, _hero_top_throw_left))
 
 # DIE 6 frames
-for x in range(1,4,1):
+for x in range(1,7,1):
     _hero_die = arcade.load_texture(file_name=path_to_string('gfx', 'hero_die'+str(x)+'.png'))
     hero_die.append(_hero_die)
 

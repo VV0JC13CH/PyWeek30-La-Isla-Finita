@@ -160,7 +160,7 @@ class GameView(arcade.View):
         # Gameplay
         self.stage = 1
         # Hero
-        self.hero = entities.Hero(self.window.width/2, self.window.height/2)
+        self.hero = entities.Hero(self.window.width/2, self.window.height*0.42)
         self.hero_action = 'idle'
 
         # Developer mode
@@ -226,10 +226,6 @@ class GameView(arcade.View):
         self.hero.update()
         self.hero.update_animation()
 
-        # Custom behaviour (states, actions etc.)
-
-        self.hero.update_on(state=self.hero_action)
-
         self.background.on_update()
         self.background.update_hour(int(self.sun_time) // 60)
 
@@ -252,18 +248,25 @@ class GameView(arcade.View):
                 self.developer_mode = True
         if self.developer_mode:
             if key == arcade.key.H:
-                self.hero_action = 'idle'
+                self.hero.change_state('idle')
             if key == arcade.key.J:
-                self.hero_action = 'run'
+                self.hero.change_state('run')
             if key == arcade.key.K:
-                self.hero_action = 'throw'
+                self.hero.change_state('throw')
             if key == arcade.key.L:
-                self.hero_action = 'die'
+                self.hero.change_state('die')
 
         self.hero.on_key_press(key)
 
     def on_key_release(self, key, _modifiers):
         self.hero.on_key_release(key)
+
+    def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
+        if self.hero.has_coco:
+            self.hero.change_state(state='throw')
+
+    def on_mouse_release(self, x: float, y: float, button: int, modifiers: int):
+        pass
 
 
 class PauseView(arcade.View):
@@ -379,23 +382,24 @@ class Island(arcade.Window):
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
-        if key == arcade.key.P:
-            # User hits f. Flip between full and not full screen.
-            self.set_fullscreen(not self.fullscreen)
+        if SET_DEVELOPER:
+            if key == arcade.key.P:
+                # User hits f. Flip between full and not full screen.
+                self.set_fullscreen(not self.fullscreen)
 
-            # Get the window coordinates. Match viewport to window coordinates
-            # so there is a one-to-one mapping.
-            width, height = self.get_size()
-            self.set_viewport(0, width, 0, height)
+                # Get the window coordinates. Match viewport to window coordinates
+                # so there is a one-to-one mapping.
+                width, height = self.get_size()
+                self.set_viewport(0, width, 0, height)
 
-        if key == arcade.key.O:
-            # User hits s. Flip between full and not full screen.
-            self.set_fullscreen(not self.fullscreen)
+            if key == arcade.key.O:
+                # User hits s. Flip between full and not full screen.
+                self.set_fullscreen(not self.fullscreen)
 
-            # Instead of a one-to-one mapping, stretch/squash window to match the
-            # constants. This does NOT respect aspect ratio. You'd need to
-            # do a bit of math for that.
-            self.set_viewport(0, SET_WIDTH, 0, SET_HEIGHT)
+                # Instead of a one-to-one mapping, stretch/squash window to match the
+                # constants. This does NOT respect aspect ratio. You'd need to
+                # do a bit of math for that.
+                self.set_viewport(0, SET_WIDTH, 0, SET_HEIGHT)
 
     def on_draw(self):
         # Draw all the sprites.
