@@ -71,11 +71,15 @@ button_textures = {"start": button_start_idle,
 
 # BACKGROUND
 dynamic_background_frames = []
+dynamic_background_leafs = []
 dynamic_background_sky_by_hour = []
 
 for x in range(1,7,1):
     background = arcade.Sprite(path_to_string('gfx', 'bg_full_island'+str(x)+'.png'), BG_SCALING)
+    leafs = arcade.load_texture(file_name=path_to_string('gfx', 'bg_full_island_leafs' + str(x) + '.png'))
     dynamic_background_frames.append(background)
+    dynamic_background_leafs.append(leafs)
+
 for x in range(1,25,1):
     sky = arcade.load_texture(path_to_string('gfx', 'sky'+str(x)+'.png'))
     dynamic_background_sky_by_hour.append(sky)

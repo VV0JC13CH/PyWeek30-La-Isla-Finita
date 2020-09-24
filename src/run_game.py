@@ -146,7 +146,7 @@ class StartGame(arcade.View):
                 self.window.show_view(game_view)
         for button in self.slot_buttons_restart:
             if button.current_state == 'hover':
-                game_view = GameView()
+                game_view = GameView(background=self.background)
                 self.window.show_view(game_view)
 
 
@@ -216,8 +216,10 @@ class GameView(arcade.View):
             self.developer_mode_pre_render()
 
         arcade.start_render()
-        self.background.on_draw()
+        self.background.draw_sea_and_sky()
+        self.background.draw()
         self.coco_system.on_draw()
+        self.background.draw_leafs()
 
         self.hero.draw()
 

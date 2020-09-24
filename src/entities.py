@@ -236,8 +236,9 @@ class CocoSystem:
             radius = 15
             inertia = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
             body = pymunk.Body(mass, inertia)
-            x = random.randint(0, self.screen_width)
-            y = self.screen_height
+            # Lets make a coco fall from tree:
+            x = random.randint(self.screen_width/2-100, self.screen_width/2)
+            y = self.screen_height/2+100
             body.position = x, y
             shape = pymunk.Circle(body, radius, pymunk.Vec2d(0, 0))
             shape.friction = 0.3
@@ -302,6 +303,14 @@ class DynamicBackground(Entity):
         self.sky = assets.dynamic_background_sky_by_hour
         self.sea = assets.sea
         self.frames_of_bg = assets.dynamic_background_frames
+        self.frames_of_bg_leafs = assets.dynamic_background_leafs
+        self.leafs = arcade.Sprite(center_x=width/2, center_y=height/2)
+        self.leafs.texture = self.frames_of_bg_leafs[0]
+        self.leafs_frame = 0
+        self.leafs.center_x = self.x
+        self.leafs.center_y = self.y
+        self.leafs.width = self.width
+        self.leafs.height = self.height
         self.frame = 0
         self.previous_delta = 0
         self.game_hour = 14
@@ -319,13 +328,18 @@ class DynamicBackground(Entity):
                                             self.sky[int(self.game_hour)])
         arcade.draw_lrwh_rectangle_textured(0, 0, self.res_width, self.res_height/2, self.sea)
 
+    def draw_leafs(self):
+        self.leafs.draw()
+
     def on_draw(self):
         self.draw_sea_and_sky()
         self.draw()
+        self.draw_leafs()
 
     def change_frame(self, frame):
         self.sprite_list.clear()
         self.append(self.frames_of_bg[frame])
+        self.leafs.texture = self.frames_of_bg_leafs[frame]
 
     def on_update(self, delta_time: float = 1/60):
         if self.current_frame < 5.9:
