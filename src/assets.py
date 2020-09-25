@@ -11,6 +11,12 @@ UNIT_SCALING = 1
 def path_to_string(directory, file):
     return str(Path.cwd().joinpath(directory, file).resolve())
 
+
+# TITLE
+game_title_orange = arcade.load_texture(path_to_string('gfx', 'bg_title1.png'))
+game_title_blue = arcade.load_texture(path_to_string('gfx', 'bg_title2.png'))
+
+
 # INTRO
 intro_authors = arcade.load_texture(path_to_string('gfx', 'intro_team_white.png'))
 
@@ -20,6 +26,10 @@ player_cursor_hover = arcade.Sprite(path_to_string('gfx', 'cursor_hover.png'), U
 player_cursor_select = arcade.Sprite(path_to_string('gfx', 'cursor_select.png'), UI_SCALING)
 
 # UI BUTTONS
+button_save_idle = arcade.Sprite(path_to_string('gfx', 'ui_button_save.png'), UI_SCALING)
+button_save_hover = arcade.Sprite(path_to_string('gfx', 'ui_button_save_hover.png'), UI_SCALING)
+button_wave_idle = arcade.Sprite(path_to_string('gfx', 'ui_button_wave.png'), UI_SCALING)
+button_wave_hover = arcade.Sprite(path_to_string('gfx', 'ui_button_wave_hover.png'), UI_SCALING)
 button_idle = arcade.Sprite(path_to_string('gfx', 'ui_button.png'), UI_SCALING)
 button_hover = arcade.Sprite(path_to_string('gfx', 'ui_button_hover.png'), UI_SCALING)
 button_start_idle = arcade.Sprite(path_to_string('gfx', 'ui_button_start.png'), UI_SCALING)
@@ -66,20 +76,29 @@ button_textures = {"start": button_start_idle,
                    "restart3": button_restart3_idle,
                    "restart3_hover": button_restart3_hover,
                    "menu": button_menu_idle,
-                   "menu_hover": button_menu_hover
+                   "menu_hover": button_menu_hover,
+                   "wave": button_wave_idle,
+                   "wave_hover": button_wave_hover,
+                   "save": button_save_idle,
+                   "save_hover": button_save_hover
 }
 
 # BACKGROUND
 dynamic_background_frames = []
+dynamic_background_leafs = []
 dynamic_background_sky_by_hour = []
 
 for x in range(1,7,1):
     background = arcade.Sprite(path_to_string('gfx', 'bg_full_island'+str(x)+'.png'), BG_SCALING)
+    leafs = arcade.load_texture(file_name=path_to_string('gfx', 'bg_full_island_leafs' + str(x) + '.png'))
     dynamic_background_frames.append(background)
+    dynamic_background_leafs.append(leafs)
+
+# SKY
+
 for x in range(1,25,1):
     sky = arcade.load_texture(path_to_string('gfx', 'sky'+str(x)+'.png'))
     dynamic_background_sky_by_hour.append(sky)
-
 
 # SEA
 sea = arcade.load_texture(path_to_string('gfx', 'bg_see.png'))
@@ -96,6 +115,11 @@ hero_top = (hero_top_idle, hero_top_run, hero_top_throw)
 hero_bottom = (hero_bottom_idle, hero_bottom_run, hero_bottom_throw)
 hero_all = (hero_top_idle, hero_top_run, hero_top_throw, hero_bottom_idle, hero_bottom_run, hero_bottom_throw)
 
+# Blue Fish
+blue_fish = []
+for x in range(1,5,1):
+    blue_fish_texture = arcade.load_texture(path_to_string('gfx', 'blue_fish'+str(x)+'.png'))
+    blue_fish.append(blue_fish_texture)
 
 # Idle 2 frames
 for x in range(1,3,1):
@@ -106,7 +130,10 @@ for x in range(1,3,1):
     _hero_top_idle = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_idle'+str(x)+'.png'))
     _hero_top_idle_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_idle'+str(x)+'.png'),
                                               flipped_horizontally=True)
-    hero_top_idle.append((_hero_top_idle, _hero_top_idle_left))
+    _hero_top_idle_coco = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_idle_coco'+str(x)+'.png'))
+    _hero_top_idle_coco_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_idle_coco'+str(x)+'.png'),
+                                                   flipped_horizontally=True)
+    hero_top_idle.append((_hero_top_idle, _hero_top_idle_left, _hero_top_idle_coco, _hero_top_idle_coco_left))
 
 # Run 4 frames
 for x in range(1,5,1):
@@ -134,6 +161,9 @@ for x in range(1,4,1):
 for x in range(1,7,1):
     _hero_die = arcade.load_texture(file_name=path_to_string('gfx', 'hero_die'+str(x)+'.png'))
     hero_die.append(_hero_die)
+
+coco_filename = path_to_string('gfx', 'coco.png')
+coco_texture = arcade.load_texture(file_name=coco_filename)
 
 # MUSIC
 track01 = path_to_string('music', 'track01.mp3')

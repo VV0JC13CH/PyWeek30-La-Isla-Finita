@@ -4,8 +4,30 @@ import assets
 import time
 # math for hero angle
 import numpy
+# cocos
+import pymunk
+import random
+import math
 
 intro_team = assets.intro_authors
+game_title_orange = assets.game_title_orange
+game_title_blue = assets.game_title_blue
+
+
+def draw_title(color, window):
+    if color == 'orange':
+        arcade.draw_lrwh_rectangle_textured(window.width / 2 - game_title_orange.width / 2,
+                                            window.height * 4 / 5,
+                                            game_title_orange.width,
+                                            game_title_orange.height,
+                                            game_title_orange)
+    else:
+        arcade.draw_lrwh_rectangle_textured(window.width / 2 - game_title_blue.width / 2,
+                                            window.height * 4 / 5,
+                                            game_title_blue.width,
+                                            game_title_blue.height,
+                                            game_title_blue)
+
 
 
 class Entity(arcade.SpriteList):
@@ -16,7 +38,7 @@ class Entity(arcade.SpriteList):
 class Hero(arcade.SpriteList):
     def __init__(self, start_x, start_y):
         super().__init__()
-        # Sprites lists, last zero means = right, one means left
+        # Sprites lists, last zero means = right, one means left, two coco, 3 left coco
         self.hero_bottom_idle = assets.hero_bottom_idle
         self.hero_bottom_run = assets.hero_bottom_run
         self.hero_bottom_throw = assets.hero_bottom_throw
@@ -30,15 +52,28 @@ class Hero(arcade.SpriteList):
         # Starting sprites
         # Idle[0], run[1] throw[2]
         self.sprite_top = arcade.Sprite()
+        self.sprite_top_coco_left = arcade.Sprite()
+        self.sprite_top_coco_right = arcade.Sprite()
         self.sprite_bottom = arcade.Sprite()
         self.sprite_top.texture = self.hero_top_idle[0][0]
+        self.sprite_top_coco_left.texture = self.hero_top_idle[0][2]
+        self.sprite_top_coco_right.texture = self.hero_top_idle[0][3]
         self.sprite_bottom.texture = self.hero_top_idle[0][0]
         self.append(self.sprite_top)
         self.append(self.sprite_bottom)
         # Actions
+        self.dying = False
         self.died = False
         self.current_state = 'idle'
-        self.has_coco = True
+        self.has_coco = False
+        self.has_coco_left = False
+        self.has_coco_left_took = False
+        self.has_coco_right = False
+        self.has_coco_right_took = False
+        self.sprite_list_coco_left = arcade.SpriteList()
+        self.sprite_list_coco_right = arcade.SpriteList()
+        self.sprite_list_coco_left.append(self.sprite_top_coco_left)
+        self.sprite_list_coco_right.append(self.sprite_top_coco_right)
         self.is_throwing = False
         # Frames
         self.current_frame_run = 0
@@ -55,6 +90,12 @@ class Hero(arcade.SpriteList):
         for sprite in self.sprite_list:
             sprite.center_x = self.center_x
             sprite.center_y = self.center_y
+        for sprite in self.sprite_list_coco_left:
+            sprite.center_x = self.center_x
+            sprite.center_y = self.center_y
+        for sprite in self.sprite_list_coco_right:
+            sprite.center_x = self.center_x
+            sprite.center_y = self.center_y
         self.change_x = 0
         self.change_y = 0
         self.movement_speed = 1.2
@@ -66,14 +107,44 @@ class Hero(arcade.SpriteList):
         self.angle = 0
 
     def change_position(self, dx, dy):
-        if not self.died:
+        if not self.dying:
             for sprite in self:
                 sprite.change_x = dx*self.movement_speed
                 sprite.change_y = dy*self.movement_speed
+            self.sprite_top_coco_left.change_x = dx * self.movement_speed
+            self.sprite_top_coco_left.change_y = dy * self.movement_speed
+            self.sprite_top_coco_right.change_x = dx * self.movement_speed
+            self.sprite_top_coco_right.change_y = dy * self.movement_speed
         else:
             for sprite in self:
                 sprite.change_x = 0
                 sprite.change_y = 0
+            self.sprite_top_coco_left.change_x = 0
+            self.sprite_top_coco_left.change_y = 0
+            self.sprite_top_coco_right.change_x = 0
+            self.sprite_top_coco_right.change_y = 0
+
+    def on_draw_cocos(self):
+        if self.has_coco_left_took:
+            self.has_coco_left = True
+            self.has_coco_left_took = False
+        elif self.has_coco_left:
+            if self.current_state != 'throw':
+                if self.current_state != 'die':
+                    self.sprite_list_coco_left.draw()
+            elif self.current_state == 'throw':
+                self.has_coco_left = False
+                self.has_coco_right = False
+        if self.has_coco_right_took:
+            self.has_coco_right = True
+            self.has_coco_right_took = False
+        elif self.has_coco_right:
+            if self.current_state != 'throw':
+                if self.current_state != 'die':
+                    self.sprite_list_coco_right.draw()
+            elif self.current_state == 'throw':
+                self.has_coco_left = False
+                self.has_coco_right = False
 
     # Giving parameters to next sprites
     def change_state(self, state):
@@ -85,25 +156,29 @@ class Hero(arcade.SpriteList):
         else:
             left = 0
         if self.current_state == 'run':
-            self.current_frame_run += 1
-            if self.current_frame_run >= 4 * self.updates_per_frame_run:
-                self.current_frame_run = 0
-            self.sprite_top.texture = self.hero_top_run[self.current_frame_run // self.updates_per_frame_run][left]
-            self.sprite_bottom.texture = self.hero_bottom_run[self.current_frame_run // self.updates_per_frame_run][left]
+            if not self.dying:
+                self.current_frame_run += 1
+                if self.current_frame_run >= 4 * self.updates_per_frame_run:
+                    self.current_frame_run = 0
+                self.sprite_top.texture = self.hero_top_run[self.current_frame_run // self.updates_per_frame_run][left]
+                self.sprite_bottom.texture = self.hero_bottom_run[self.current_frame_run // self.updates_per_frame_run][left]
         elif self.current_state == 'throw':
-            self.current_frame_throw += 1
-            if self.current_frame_throw >= 3 * self.updates_per_frame_throw:
-                self.has_coco = False
-                self.current_frame_throw = 0
-            self.sprite_top.texture = self.hero_top_throw[self.current_frame_throw // self.updates_per_frame_throw][left]
-            self.sprite_bottom.texture = self.hero_bottom_throw[self.current_frame_throw // self.updates_per_frame_throw][left]
+            if not self.dying:
+                self.current_frame_throw += 1
+                if self.current_frame_throw >= 3 * self.updates_per_frame_throw:
+                    self.has_coco = False
+                    self.current_frame_throw = 0
+                self.sprite_top.texture = self.hero_top_throw[self.current_frame_throw // self.updates_per_frame_throw][left]
+                self.sprite_bottom.texture = self.hero_bottom_throw[self.current_frame_throw // self.updates_per_frame_throw][left]
         elif self.current_state == 'idle':
-            self.current_frame_idle += 1
-            if self.current_frame_idle >= 2 * self.updates_per_frame_idle:
-                self.current_frame_idle = 0
-            self.sprite_top.texture = self.hero_top_idle[self.current_frame_idle // self.updates_per_frame_idle][left]
-            self.sprite_bottom.texture = self.hero_bottom_idle[self.current_frame_idle // self.updates_per_frame_idle][left]
+            if not self.dying:
+                self.current_frame_idle += 1
+                if self.current_frame_idle >= 2 * self.updates_per_frame_idle:
+                    self.current_frame_idle = 0
+                self.sprite_top.texture = self.hero_top_idle[self.current_frame_idle // self.updates_per_frame_idle][left]
+                self.sprite_bottom.texture = self.hero_bottom_idle[self.current_frame_idle // self.updates_per_frame_idle][left]
         elif self.current_state == 'die':
+            self.dying = True
             if not self.died:
                 self.current_frame_die += 1
                 self.sprite_bottom.angle -= 1
@@ -114,6 +189,7 @@ class Hero(arcade.SpriteList):
                 self.sprite_bottom.texture = self.hero_die[self.current_frame_die // self.updates_per_frame_die]
             else:
                 self.sprite_bottom.texture = self.hero_die[5]
+
 
     def flip_horizontaly(self, mouse_x):
         if mouse_x < self.center_x:
@@ -136,32 +212,219 @@ class Hero(arcade.SpriteList):
         angle = self.get_angle(mouse_x, mouse_y)
         if int(abs(angle)) in range(0,10):
             self.sprite_top.angle = -float(angle)
+            self.sprite_top_coco_left.angle = -float(angle)
+            self.sprite_top_coco_right.angle = -float(angle)
 
     def on_key_press(self, key):
         """
         Called whenever a key is pressed.
         """
-        if key == arcade.key.W:
-            self.change_y = self.movement_speed
-        elif key == arcade.key.S:
-            self.change_y = -self.movement_speed
-        elif key == arcade.key.A:
-            self.change_x = -self.movement_speed
-        elif key == arcade.key.D:
-            self.change_x = self.movement_speed
-        self.change_state('run')
-        self.change_position(self.change_x, self.change_y)
+        if not self.dying:
+            if key == arcade.key.A:
+                self.change_x = -self.movement_speed
+                self.change_state('run')
+            elif key == arcade.key.D:
+                self.change_x = self.movement_speed
+                self.change_state('run')
+            self.change_position(self.change_x, self.change_y)
 
     def on_key_release(self, key):
         """
         Called when the user releases a key.
         """
-        if key == arcade.key.W or key == arcade.key.S:
-            self.change_y = 0
-        elif key == arcade.key.A or key == arcade.key.D:
-            self.change_x = 0
-        self.change_state(state='idle')
-        self.change_position(self.change_x, self.change_y)
+        if not self.dying:
+            if key == arcade.key.W or key == arcade.key.S:
+                self.change_y = 0
+                self.change_state(state='idle')
+            elif key == arcade.key.A or key == arcade.key.D:
+                self.change_x = 0
+                self.change_state(state='idle')
+            self.change_position(self.change_x, self.change_y)
+
+
+class Coco(arcade.Sprite):
+    def __init__(self, filename, pymunk_shape):
+        super().__init__(filename, center_x=pymunk_shape.body.position.x, center_y=pymunk_shape.body.position.y)
+        self.width = pymunk_shape.radius * 2
+        self.height = pymunk_shape.radius * 2
+        self.pymunk_shape = pymunk_shape
+
+
+class FireCoco(arcade.Sprite):
+    def __init__(self, filename, pymunk_shape):
+        super().__init__(filename, center_x=pymunk_shape.body.position.x, center_y=pymunk_shape.body.position.y)
+        self.width = pymunk_shape.radius * 2
+        self.height = pymunk_shape.radius * 2
+        self.pymunk_shape = pymunk_shape
+
+
+class CocoSystem:
+    def __init__(self, screen_width, screen_height, coco_x, coco_y):
+        self.obstacle_list = arcade.SpriteList()
+        self.coco_list: arcade.SpriteList[Coco] = arcade.SpriteList()
+        self.fire_coco_list: arcade.SpriteList[FireCoco] = arcade.SpriteList()
+
+        self.shoot_one_cocos = False
+        self.shoot_two_cocos = False
+
+        # -- Pymunk
+        self.space = pymunk.Space()
+        self.space.gravity = (0.0, -900.0)
+
+        self.isle_borders = []
+        self.ticks_to_next_coco = 10
+
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+        self.coco_x = coco_x
+        self.coco_y = coco_y
+
+        # Left side of island
+        body = pymunk.Body(body_type=pymunk.Body.STATIC)
+        shape = pymunk.Segment(body, [screen_width/2-260, screen_height/2-180],
+                               [screen_width/2-190, screen_height/2-100], 0.0)
+        shape.friction = 10
+        self.space.add(shape)
+        self.isle_borders.append(shape)
+
+        # Flat side of island
+        body = pymunk.Body(body_type=pymunk.Body.STATIC)
+        shape = pymunk.Segment(body, [screen_width/2-195, screen_height/2-95],
+                               [screen_width/2+195, screen_height/2-95], 0.0)
+        shape.friction = 10
+        self.space.add(shape)
+        self.isle_borders.append(shape)
+
+        # Right side of island
+        body = pymunk.Body(body_type=pymunk.Body.STATIC)
+        shape = pymunk.Segment(body, [screen_width/2+190, screen_height/2-100], [screen_width/2+270, screen_height/2-190], 0.0)
+        shape.friction = 10
+        self.space.add(shape)
+        self.isle_borders.append(shape)
+
+    def on_draw(self):
+        self.coco_list.draw()
+        self.fire_coco_list.draw()
+
+    def on_update(self, player_list):
+        player = player_list
+        # Getting cocos from tree:
+        self.ticks_to_next_coco -= 1
+        if self.ticks_to_next_coco <= 0:
+            self.ticks_to_next_coco = 100
+            mass = 3.0
+            radius = 15
+            inertia = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
+            body = pymunk.Body(mass, inertia)
+            # Lets make a coco fall from tree:
+            x = random.randint(self.screen_width/2-100, self.screen_width/2)
+            y = self.screen_height/2+100
+            body.position = x, y
+            shape = pymunk.Circle(body, radius, pymunk.Vec2d(0, 0))
+            shape.friction = 0.3
+            self.space.add(body, shape)
+            sprite = Coco(filename=assets.coco_filename, pymunk_shape=shape)
+            self.coco_list.append(sprite)
+
+        # Check for cocos that fall into water
+        for coco in self.coco_list:
+            if coco.pymunk_shape.body.position.y < self.screen_height/2-180:
+                # Remove balls from physics space
+                self.space.remove(coco.pymunk_shape, coco.pymunk_shape.body)
+                # Remove balls from physics list
+                coco.remove_from_sprite_lists()
+        for coco in self.fire_coco_list:
+            if coco.pymunk_shape.body.position.y < self.screen_height/2-180:
+                self.space.remove(coco.pymunk_shape, coco.pymunk_shape.body)
+                coco.remove_from_sprite_lists()
+            elif coco.pymunk_shape.body.position.x > self.screen_width+10:
+                self.space.remove(coco.pymunk_shape, coco.pymunk_shape.body)
+                coco.remove_from_sprite_lists()
+            elif coco.pymunk_shape.body.position.x < -10:
+                self.space.remove(coco.pymunk_shape, coco.pymunk_shape.body)
+                coco.remove_from_sprite_lists()
+
+        # Grab cocos by player:
+        for coco in self.coco_list:
+            if arcade.check_for_collision_with_list(coco, player):
+                # Remove balls from physics space
+                if not player.has_coco_left:
+                    self.space.remove(coco.pymunk_shape, coco.pymunk_shape.body)
+                # Remove balls from physics list
+                    coco.remove_from_sprite_lists()
+                    player.has_coco_left_took = True
+                elif not player.has_coco_right:
+                    self.space.remove(coco.pymunk_shape, coco.pymunk_shape.body)
+                    # Remove balls from physics list
+                    coco.remove_from_sprite_lists()
+                    player.has_coco_right_took = True
+
+        self.space.step(1 / 60.0)
+
+        # Move sprites to where physics objects are
+        for coco in self.coco_list:
+            coco.center_x = coco.pymunk_shape.body.position.x
+            coco.center_y = coco.pymunk_shape.body.position.y
+            coco.angle = math.degrees(coco.pymunk_shape.body.angle)
+
+        if self.shoot_two_cocos:
+            mass = 200
+            radius = 15
+            moment = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
+            body = pymunk.Body(mass, moment)
+            # Lets make a coco fall from tree:
+            x = player.sprite_list[0].center_x
+            y = player.sprite_list[0].center_y + 24
+            body.position = x, y
+            shape = pymunk.Circle(body, radius, pymunk.Vec2d(0, 0))
+            shape.friction = 0.3
+            self.space.add(body, shape)
+            power = 450
+            body.apply_impulse_at_local_point(power*pymunk.Vec2d(player.throw_at_x-player.center_x,
+                                                                 player.throw_at_y-player.center_y))
+            sprite = Coco(filename=assets.coco_filename, pymunk_shape=shape)
+            self.fire_coco_list.append(sprite)
+
+            body = pymunk.Body(mass, moment)
+            # Lets make a coco fall from tree:
+            x = player.sprite_list[0].center_x
+            y = player.sprite_list[0].center_y - 24
+            body.position = x, y
+            shape = pymunk.Circle(body, radius, pymunk.Vec2d(0, 0))
+            shape.friction = 0.3
+            self.space.add(body, shape)
+            power = 450
+            body.apply_impulse_at_local_point(power*pymunk.Vec2d(player.throw_at_x-player.center_x,
+                                                                 player.throw_at_y-player.center_y))
+            sprite = Coco(filename=assets.coco_filename, pymunk_shape=shape)
+            self.fire_coco_list.append(sprite)
+            self.shoot_two_cocos = False
+
+        elif self.shoot_one_cocos:
+            mass = 200
+            radius = 15
+            moment = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
+            body = pymunk.Body(mass, moment)
+            # Lets make a coco fall from tree:
+            x = player.sprite_list[0].center_x
+            y = player.sprite_list[0].center_y+24
+            body.position = x, y
+            shape = pymunk.Circle(body, radius, pymunk.Vec2d(0, 0))
+            shape.friction = 0.3
+            self.space.add(body, shape)
+            power = 900
+            body.apply_impulse_at_local_point(power*pymunk.Vec2d(player.throw_at_x-player.center_x,
+                                                                 player.throw_at_y-player.center_y))
+            sprite = Coco(filename=assets.coco_filename, pymunk_shape=shape)
+            self.fire_coco_list.append(sprite)
+            self.shoot_one_cocos = False
+
+        # Move sprites to where physics objects are
+        for coco in self.fire_coco_list:
+            coco.center_x = coco.pymunk_shape.body.position.x
+            coco.center_y = coco.pymunk_shape.body.position.y
+            coco.angle = math.degrees(coco.pymunk_shape.body.angle)
+
 
 class Cursor(arcade.SpriteList):
     def __init__(self):
@@ -203,6 +466,14 @@ class DynamicBackground(Entity):
         self.sky = assets.dynamic_background_sky_by_hour
         self.sea = assets.sea
         self.frames_of_bg = assets.dynamic_background_frames
+        self.frames_of_bg_leafs = assets.dynamic_background_leafs
+        self.leafs = arcade.Sprite(center_x=width/2, center_y=height/2)
+        self.leafs.texture = self.frames_of_bg_leafs[0]
+        self.leafs_frame = 0
+        self.leafs.center_x = self.x
+        self.leafs.center_y = self.y
+        self.leafs.width = self.width
+        self.leafs.height = self.height
         self.frame = 0
         self.previous_delta = 0
         self.game_hour = 14
@@ -220,13 +491,18 @@ class DynamicBackground(Entity):
                                             self.sky[int(self.game_hour)])
         arcade.draw_lrwh_rectangle_textured(0, 0, self.res_width, self.res_height/2, self.sea)
 
+    def draw_leafs(self):
+        self.leafs.draw()
+
     def on_draw(self):
         self.draw_sea_and_sky()
         self.draw()
+        self.draw_leafs()
 
     def change_frame(self, frame):
         self.sprite_list.clear()
         self.append(self.frames_of_bg[frame])
+        self.leafs.texture = self.frames_of_bg_leafs[frame]
 
     def on_update(self, delta_time: float = 1/60):
         if self.current_frame < 5.9:
@@ -248,8 +524,9 @@ class DynamicBackground(Entity):
 class Button(Entity):
     # EVERYTHING IS FREAKING BUTTON IN THIS GAME
     def __init__(self, width=200, height=200, x=200, y=200,
-                 texture_idle=assets.button_idle, texture_hover=assets.button_hover):
+                 texture_idle=assets.button_idle, texture_hover=assets.button_hover, slot=0):
         super().__init__()
+        self.slot = slot
         self.x = x
         self.y = y
         self.width = width

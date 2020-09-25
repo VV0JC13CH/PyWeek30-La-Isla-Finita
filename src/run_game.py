@@ -46,6 +46,8 @@ class IntroView(arcade.View):
 
     def on_draw(self):
         arcade.start_render()
+        if self.wait_sec >= 4:
+            entities.draw_title(color='orange', window=self.window)
 
         arcade.draw_lrwh_rectangle_textured(self.window.width/2-entities.intro_team.width/4,
                                             self.window.height/2-entities.intro_team.height/4,
@@ -57,10 +59,7 @@ class IntroView(arcade.View):
         if self.wait_sec >= 2:
             arcade.draw_text("PyWeek 30 Entry", self.window.width/2,
                              self.window.height/2-entities.intro_team.height/4-150,
-                             DEFAULT_FONT, font_size=30, anchor_x="center")
-        if self.wait_sec >= 5:
-            arcade.draw_text("Click to continue...", 0,
-                             0, DEFAULT_FONT, font_size=20, anchor_x="left")
+                             DEFAULT_FONT, font_size=25, anchor_x="center")
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
         menu_view = MenuView()
@@ -93,6 +92,7 @@ class MenuView(arcade.View):
     def on_draw(self):
         arcade.start_render()
         self.background.on_draw()
+        entities.draw_title(color='blue', window=self.window)
         self.button_start.draw()
         self.button_exit.draw()
 
@@ -116,11 +116,13 @@ class StartGame(arcade.View):
             _slot_button = entities.Button(x=self.margin*slot, y=self.window.height/3,
                                            width=150, height=35,
                                            texture_idle='slot'+str(slot),
-                                           texture_hover='slot'+str(slot)+'_hover')
+                                           texture_hover='slot'+str(slot)+'_hover',
+                                           slot=slot)
             _slot_restart_button = entities.Button(x=self.margin*slot, y=self.window.height/4,
                                                    width=150, height=35,
                                                    texture_idle='restart'+str(slot),
-                                                   texture_hover='restart'+str(slot)+'_hover')
+                                                   texture_hover='restart'+str(slot)+'_hover',
+                                                   slot=slot)
             self.slot_buttons.append(_slot_button)
             self.slot_buttons_restart.append(_slot_restart_button)
 
@@ -134,6 +136,7 @@ class StartGame(arcade.View):
     def on_draw(self):
         arcade.start_render()
         self.background.on_draw()
+        entities.draw_title(color='blue', window=self.window)
         for button in self.slot_buttons:
             button.draw()
         for button in self.slot_buttons_restart:
@@ -142,12 +145,51 @@ class StartGame(arcade.View):
     def on_mouse_press(self, _x, _y, _button, _modifiers):
         for button in self.slot_buttons:
             if button.current_state == 'hover':
-                game_view = GameView(background=self.background)
-                self.window.show_view(game_view)
+                stage_view = StageView(background=self.background, wave=1, slot=button.slot)
+                self.window.show_view(stage_view)
         for button in self.slot_buttons_restart:
             if button.current_state == 'hover':
-                game_view = GameView()
-                self.window.show_view(game_view)
+                stage_view = StageView(background=self.background, wave=1, slot=button.slot)
+                self.window.show_view(stage_view)
+
+
+class StageView(arcade.View):
+    def __init__(self, background, wave, slot):
+        super().__init__()
+        self.wave = wave
+        self.slot = slot
+        self.button_save = entities.Button(x=self.window.width*0.4 - 100, y=self.window.height*1/6,
+                                           width=200, height=50,
+                                           texture_idle='save',
+                                           texture_hover='save_hover')
+        self.button_wave = entities.Button(x=self.window.width*0.8 - 100, y=self.window.height*1/6,
+                                           width=200, height=50,
+                                           texture_idle='wave',
+                                           texture_hover='wave_hover')
+        self.background = background
+
+    def on_update(self, delta_time: float):
+        self.background.on_update()
+        self.button_save.detect_mouse(self.window.cursor)
+        self.button_wave.detect_mouse(self.window.cursor)
+
+    def on_draw(self):
+        arcade.start_render()
+        self.background.on_draw()
+        entities.draw_title(color='blue', window=self.window)
+        arcade.draw_text('WAVE ' + str(self.wave), self.window.width / 2,
+                         self.window.height * 0.25,
+                         DEFAULT_FONT, font_size=25, anchor_x="center")
+        self.button_save.draw()
+        self.button_wave.draw()
+
+    def on_mouse_press(self, _x, _y, _button, _modifiers):
+        if self.button_save.current_state == 'hover':
+            game_view = GameView(background = self.background)
+            self.window.show_view(game_view)
+        if self.button_wave.current_state == 'hover':
+            game_view = GameView(background=self.background)
+            self.window.show_view(game_view)
 
 
 class GameView(arcade.View):
@@ -171,6 +213,10 @@ class GameView(arcade.View):
         self.frame_count = 0
         self.fps_start_timer = None
         self.fps = None
+
+        #Physic system
+        self.coco_system = entities.CocoSystem(screen_width=self.window.width, screen_height=self.window.height,
+                                               coco_x=self.window.width/2, coco_y=self.window.height/2)
 
     def developer_mode_pre_render(self):
         if self.developer_mode:
@@ -212,9 +258,13 @@ class GameView(arcade.View):
             self.developer_mode_pre_render()
 
         arcade.start_render()
-        self.background.on_draw()
+        self.background.draw_sea_and_sky()
+        self.background.draw()
+        self.coco_system.on_draw()
+        self.background.draw_leafs()
 
         self.hero.draw()
+        self.hero.on_draw_cocos()
 
         if self.developer_mode:
             self.developer_mode_post_render()
@@ -225,6 +275,10 @@ class GameView(arcade.View):
 
         self.hero.update()
         self.hero.update_animation()
+        self.hero.sprite_top_coco_right.update()
+        self.hero.sprite_top_coco_left.update()
+
+        self.coco_system.on_update(player_list=self.hero)
 
         self.background.on_update()
         self.background.update_hour(int(self.sun_time) // 60)
@@ -247,12 +301,6 @@ class GameView(arcade.View):
             else:
                 self.developer_mode = True
         if self.developer_mode:
-            if key == arcade.key.H:
-                self.hero.change_state('idle')
-            if key == arcade.key.J:
-                self.hero.change_state('run')
-            if key == arcade.key.K:
-                self.hero.change_state('throw')
             if key == arcade.key.L:
                 self.hero.change_state('die')
 
@@ -262,8 +310,12 @@ class GameView(arcade.View):
         self.hero.on_key_release(key)
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
-        if self.hero.has_coco:
+        if self.hero.has_coco_right:
             self.hero.change_state(state='throw')
+            self.coco_system.shoot_two_cocos = True
+        elif self.hero.has_coco_left:
+            self.hero.change_state(state='throw')
+            self.coco_system.shoot_one_cocos = True
 
     def on_mouse_release(self, x: float, y: float, button: int, modifiers: int):
         pass
@@ -295,6 +347,7 @@ class PauseView(arcade.View):
     def on_draw(self):
         arcade.start_render()
         self.background.on_draw()
+        entities.draw_title(color='blue', window=self.window)
         self.button_resume.draw()
         self.button_exit.draw()
         self.button_menu.draw()
