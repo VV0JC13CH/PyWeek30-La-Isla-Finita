@@ -222,6 +222,7 @@ class GameView(arcade.View):
         self.background.draw_leafs()
 
         self.hero.draw()
+        self.hero.on_draw_cocos()
 
         if self.developer_mode:
             self.developer_mode_post_render()
@@ -232,8 +233,10 @@ class GameView(arcade.View):
 
         self.hero.update()
         self.hero.update_animation()
+        self.hero.sprite_top_coco_right.update()
+        self.hero.sprite_top_coco_left.update()
 
-        self.coco_system.on_update()
+        self.coco_system.on_update(player_list=self.hero)
 
         self.background.on_update()
         self.background.update_hour(int(self.sun_time) // 60)
@@ -256,12 +259,6 @@ class GameView(arcade.View):
             else:
                 self.developer_mode = True
         if self.developer_mode:
-            if key == arcade.key.H:
-                self.hero.change_state('idle')
-            if key == arcade.key.J:
-                self.hero.change_state('run')
-            if key == arcade.key.K:
-                self.hero.change_state('throw')
             if key == arcade.key.L:
                 self.hero.change_state('die')
 
@@ -271,7 +268,9 @@ class GameView(arcade.View):
         self.hero.on_key_release(key)
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
-        if self.hero.has_coco:
+        if self.hero.has_coco_left:
+            self.hero.change_state(state='throw')
+        elif self.hero.has_coco_right:
             self.hero.change_state(state='throw')
 
     def on_mouse_release(self, x: float, y: float, button: int, modifiers: int):

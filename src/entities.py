@@ -34,19 +34,27 @@ class Hero(arcade.SpriteList):
         # Starting sprites
         # Idle[0], run[1] throw[2]
         self.sprite_top = arcade.Sprite()
-        self.sprite_top_coco = arcade.Sprite()
+        self.sprite_top_coco_left = arcade.Sprite()
+        self.sprite_top_coco_right = arcade.Sprite()
         self.sprite_bottom = arcade.Sprite()
         self.sprite_top.texture = self.hero_top_idle[0][0]
-        self.sprite_top_coco.texture = self.hero_top_idle[0][2]
+        self.sprite_top_coco_left.texture = self.hero_top_idle[0][2]
+        self.sprite_top_coco_right.texture = self.hero_top_idle[0][3]
         self.sprite_bottom.texture = self.hero_top_idle[0][0]
         self.append(self.sprite_top)
         self.append(self.sprite_bottom)
-        self.append(self.sprite_top_coco)
         # Actions
         self.died = False
         self.current_state = 'idle'
         self.has_coco = False
-        self.taken_coco = False
+        self.has_coco_left = False
+        self.has_coco_left_took = False
+        self.has_coco_right = False
+        self.has_coco_right_took = False
+        self.sprite_list_coco_left = arcade.SpriteList()
+        self.sprite_list_coco_right = arcade.SpriteList()
+        self.sprite_list_coco_left.append(self.sprite_top_coco_left)
+        self.sprite_list_coco_right.append(self.sprite_top_coco_right)
         self.is_throwing = False
         # Frames
         self.current_frame_run = 0
@@ -61,6 +69,12 @@ class Hero(arcade.SpriteList):
         self.center_x = start_x
         self.center_y = start_y
         for sprite in self.sprite_list:
+            sprite.center_x = self.center_x
+            sprite.center_y = self.center_y
+        for sprite in self.sprite_list_coco_left:
+            sprite.center_x = self.center_x
+            sprite.center_y = self.center_y
+        for sprite in self.sprite_list_coco_right:
             sprite.center_x = self.center_x
             sprite.center_y = self.center_y
         self.change_x = 0
@@ -78,10 +92,40 @@ class Hero(arcade.SpriteList):
             for sprite in self:
                 sprite.change_x = dx*self.movement_speed
                 sprite.change_y = dy*self.movement_speed
+            self.sprite_top_coco_left.change_x = dx * self.movement_speed
+            self.sprite_top_coco_left.change_y = dy * self.movement_speed
+            self.sprite_top_coco_right.change_x = dx * self.movement_speed
+            self.sprite_top_coco_right.change_y = dy * self.movement_speed
         else:
             for sprite in self:
                 sprite.change_x = 0
                 sprite.change_y = 0
+            self.sprite_top_coco_left.change_x = 0
+            self.sprite_top_coco_left.change_y = 0
+            self.sprite_top_coco_right.change_x = 0
+            self.sprite_top_coco_right.change_y = 0
+
+    def on_draw_cocos(self):
+        if self.has_coco_left_took:
+            self.has_coco_left = True
+            self.has_coco_left_took = False
+        elif self.has_coco_left:
+            if self.current_state != 'throw':
+                if self.current_state != 'die':
+                    self.sprite_list_coco_left.draw()
+            elif self.current_state == 'throw':
+                self.has_coco_left = False
+                self.has_coco_right = False
+        if self.has_coco_right_took:
+            self.has_coco_right = True
+            self.has_coco_right_took = False
+        elif self.has_coco_right:
+            if self.current_state != 'throw':
+                if self.current_state != 'die':
+                    self.sprite_list_coco_right.draw()
+            elif self.current_state == 'throw':
+                self.has_coco_left = False
+                self.has_coco_right = False
 
     # Giving parameters to next sprites
     def change_state(self, state):
@@ -119,15 +163,9 @@ class Hero(arcade.SpriteList):
                     self.current_frame_die = 0
                     self.died = True
                 self.sprite_top.remove_from_sprite_lists()
-                self.sprite_top_coco.remove_from_sprite_lists()
                 self.sprite_bottom.texture = self.hero_die[self.current_frame_die // self.updates_per_frame_die]
             else:
                 self.sprite_bottom.texture = self.hero_die[5]
-        if not self.has_coco:
-            self.sprite_top_coco.remove_from_sprite_lists()
-        if self.taken_coco:
-            self.has_coco = True
-            self.append(self.sprite_top_coco)
 
     def flip_horizontaly(self, mouse_x):
         if mouse_x < self.center_x:
@@ -150,7 +188,8 @@ class Hero(arcade.SpriteList):
         angle = self.get_angle(mouse_x, mouse_y)
         if int(abs(angle)) in range(0,10):
             self.sprite_top.angle = -float(angle)
-            self.sprite_top_coco.angle = -float(angle)
+            self.sprite_top_coco_left.angle = -float(angle)
+            self.sprite_top_coco_right.angle = -float(angle)
 
     def on_key_press(self, key):
         """
@@ -228,11 +267,12 @@ class CocoSystem:
     def on_draw(self):
         self.coco_list.draw()
 
-    def on_update(self):
+    def on_update(self, player_list):
+        player = player_list
         self.ticks_to_next_ball -= 1
         if self.ticks_to_next_ball <= 0:
-            self.ticks_to_next_ball = 20
-            mass = 0.5
+            self.ticks_to_next_ball = 100
+            mass = 3.0
             radius = 15
             inertia = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
             body = pymunk.Body(mass, inertia)
@@ -246,13 +286,28 @@ class CocoSystem:
             sprite = Coco(filename=assets.coco_filename, pymunk_shape=shape)
             self.coco_list.append(sprite)
 
-        # Check for balls that fall off the screen
+        # Check for cocos that fall into water
         for coco in self.coco_list:
-            if coco.pymunk_shape.body.position.y < 0:
+            if coco.pymunk_shape.body.position.y < self.screen_height/2-180:
                 # Remove balls from physics space
                 self.space.remove(coco.pymunk_shape, coco.pymunk_shape.body)
                 # Remove balls from physics list
                 coco.remove_from_sprite_lists()
+
+        # Grab cocos by player:
+        for coco in self.coco_list:
+            if arcade.check_for_collision_with_list(coco, player):
+                # Remove balls from physics space
+                if not player.has_coco_left:
+                    self.space.remove(coco.pymunk_shape, coco.pymunk_shape.body)
+                # Remove balls from physics list
+                    coco.remove_from_sprite_lists()
+                    player.has_coco_left_took = True
+                elif not player.has_coco_right:
+                    self.space.remove(coco.pymunk_shape, coco.pymunk_shape.body)
+                    # Remove balls from physics list
+                    coco.remove_from_sprite_lists()
+                    player.has_coco_right_took = True
 
         self.space.step(1 / 60.0)
 
