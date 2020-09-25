@@ -44,6 +44,7 @@ class Hero(arcade.SpriteList):
         self.append(self.sprite_top)
         self.append(self.sprite_bottom)
         # Actions
+        self.dying = False
         self.died = False
         self.current_state = 'idle'
         self.has_coco = False
@@ -88,7 +89,7 @@ class Hero(arcade.SpriteList):
         self.angle = 0
 
     def change_position(self, dx, dy):
-        if not self.died:
+        if not self.dying:
             for sprite in self:
                 sprite.change_x = dx*self.movement_speed
                 sprite.change_y = dy*self.movement_speed
@@ -137,25 +138,29 @@ class Hero(arcade.SpriteList):
         else:
             left = 0
         if self.current_state == 'run':
-            self.current_frame_run += 1
-            if self.current_frame_run >= 4 * self.updates_per_frame_run:
-                self.current_frame_run = 0
-            self.sprite_top.texture = self.hero_top_run[self.current_frame_run // self.updates_per_frame_run][left]
-            self.sprite_bottom.texture = self.hero_bottom_run[self.current_frame_run // self.updates_per_frame_run][left]
+            if not self.dying:
+                self.current_frame_run += 1
+                if self.current_frame_run >= 4 * self.updates_per_frame_run:
+                    self.current_frame_run = 0
+                self.sprite_top.texture = self.hero_top_run[self.current_frame_run // self.updates_per_frame_run][left]
+                self.sprite_bottom.texture = self.hero_bottom_run[self.current_frame_run // self.updates_per_frame_run][left]
         elif self.current_state == 'throw':
-            self.current_frame_throw += 1
-            if self.current_frame_throw >= 3 * self.updates_per_frame_throw:
-                self.has_coco = False
-                self.current_frame_throw = 0
-            self.sprite_top.texture = self.hero_top_throw[self.current_frame_throw // self.updates_per_frame_throw][left]
-            self.sprite_bottom.texture = self.hero_bottom_throw[self.current_frame_throw // self.updates_per_frame_throw][left]
+            if not self.dying:
+                self.current_frame_throw += 1
+                if self.current_frame_throw >= 3 * self.updates_per_frame_throw:
+                    self.has_coco = False
+                    self.current_frame_throw = 0
+                self.sprite_top.texture = self.hero_top_throw[self.current_frame_throw // self.updates_per_frame_throw][left]
+                self.sprite_bottom.texture = self.hero_bottom_throw[self.current_frame_throw // self.updates_per_frame_throw][left]
         elif self.current_state == 'idle':
-            self.current_frame_idle += 1
-            if self.current_frame_idle >= 2 * self.updates_per_frame_idle:
-                self.current_frame_idle = 0
-            self.sprite_top.texture = self.hero_top_idle[self.current_frame_idle // self.updates_per_frame_idle][left]
-            self.sprite_bottom.texture = self.hero_bottom_idle[self.current_frame_idle // self.updates_per_frame_idle][left]
+            if not self.dying:
+                self.current_frame_idle += 1
+                if self.current_frame_idle >= 2 * self.updates_per_frame_idle:
+                    self.current_frame_idle = 0
+                self.sprite_top.texture = self.hero_top_idle[self.current_frame_idle // self.updates_per_frame_idle][left]
+                self.sprite_bottom.texture = self.hero_bottom_idle[self.current_frame_idle // self.updates_per_frame_idle][left]
         elif self.current_state == 'die':
+            self.dying = True
             if not self.died:
                 self.current_frame_die += 1
                 self.sprite_bottom.angle -= 1
@@ -166,6 +171,7 @@ class Hero(arcade.SpriteList):
                 self.sprite_bottom.texture = self.hero_die[self.current_frame_die // self.updates_per_frame_die]
             else:
                 self.sprite_bottom.texture = self.hero_die[5]
+
 
     def flip_horizontaly(self, mouse_x):
         if mouse_x < self.center_x:
@@ -195,27 +201,27 @@ class Hero(arcade.SpriteList):
         """
         Called whenever a key is pressed.
         """
-        if key == arcade.key.W:
-            self.change_y = self.movement_speed
-        elif key == arcade.key.S:
-            self.change_y = -self.movement_speed
-        elif key == arcade.key.A:
-            self.change_x = -self.movement_speed
-        elif key == arcade.key.D:
-            self.change_x = self.movement_speed
-        self.change_state('run')
-        self.change_position(self.change_x, self.change_y)
+        if not self.dying:
+            if key == arcade.key.A:
+                self.change_x = -self.movement_speed
+                self.change_state('run')
+            elif key == arcade.key.D:
+                self.change_x = self.movement_speed
+                self.change_state('run')
+            self.change_position(self.change_x, self.change_y)
 
     def on_key_release(self, key):
         """
         Called when the user releases a key.
         """
-        if key == arcade.key.W or key == arcade.key.S:
-            self.change_y = 0
-        elif key == arcade.key.A or key == arcade.key.D:
-            self.change_x = 0
-        self.change_state(state='idle')
-        self.change_position(self.change_x, self.change_y)
+        if not self.dying:
+            if key == arcade.key.W or key == arcade.key.S:
+                self.change_y = 0
+                self.change_state(state='idle')
+            elif key == arcade.key.A or key == arcade.key.D:
+                self.change_x = 0
+                self.change_state(state='idle')
+            self.change_position(self.change_x, self.change_y)
 
 
 class Coco(arcade.Sprite):
@@ -342,20 +348,54 @@ class CocoSystem:
             coco.center_y = coco.pymunk_shape.body.position.y
             coco.angle = math.degrees(coco.pymunk_shape.body.angle)
 
-        if self.shoot_one_cocos:
+        if self.shoot_two_cocos:
             mass = 200
             radius = 15
             moment = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
             body = pymunk.Body(mass, moment)
             # Lets make a coco fall from tree:
             x = player.sprite_list[0].center_x
-            y = player.sprite_list[0].center_y
+            y = player.sprite_list[0].center_y + 24
             body.position = x, y
             shape = pymunk.Circle(body, radius, pymunk.Vec2d(0, 0))
             shape.friction = 0.3
             self.space.add(body, shape)
-            f = 100000
-            body.apply_impulse_at_local_point((f, 0), (0, 0))
+            power = 450
+            body.apply_impulse_at_local_point(power*pymunk.Vec2d(player.throw_at_x-player.center_x,
+                                                                 player.throw_at_y-player.center_y))
+            sprite = Coco(filename=assets.coco_filename, pymunk_shape=shape)
+            self.fire_coco_list.append(sprite)
+
+            body = pymunk.Body(mass, moment)
+            # Lets make a coco fall from tree:
+            x = player.sprite_list[0].center_x
+            y = player.sprite_list[0].center_y - 24
+            body.position = x, y
+            shape = pymunk.Circle(body, radius, pymunk.Vec2d(0, 0))
+            shape.friction = 0.3
+            self.space.add(body, shape)
+            power = 450
+            body.apply_impulse_at_local_point(power*pymunk.Vec2d(player.throw_at_x-player.center_x,
+                                                                 player.throw_at_y-player.center_y))
+            sprite = Coco(filename=assets.coco_filename, pymunk_shape=shape)
+            self.fire_coco_list.append(sprite)
+            self.shoot_two_cocos = False
+
+        elif self.shoot_one_cocos:
+            mass = 200
+            radius = 15
+            moment = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
+            body = pymunk.Body(mass, moment)
+            # Lets make a coco fall from tree:
+            x = player.sprite_list[0].center_x
+            y = player.sprite_list[0].center_y+24
+            body.position = x, y
+            shape = pymunk.Circle(body, radius, pymunk.Vec2d(0, 0))
+            shape.friction = 0.3
+            self.space.add(body, shape)
+            power = 900
+            body.apply_impulse_at_local_point(power*pymunk.Vec2d(player.throw_at_x-player.center_x,
+                                                                 player.throw_at_y-player.center_y))
             sprite = Coco(filename=assets.coco_filename, pymunk_shape=shape)
             self.fire_coco_list.append(sprite)
             self.shoot_one_cocos = False
