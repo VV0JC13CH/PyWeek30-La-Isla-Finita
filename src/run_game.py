@@ -270,8 +270,10 @@ class GameView(arcade.View):
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
         if self.hero.has_coco_left:
             self.hero.change_state(state='throw')
+            self.coco_system.shoot_one_cocos = True
         elif self.hero.has_coco_right:
             self.hero.change_state(state='throw')
+            self.coco_system.shoot_two_cocos = True
 
     def on_mouse_release(self, x: float, y: float, button: int, modifiers: int):
         pass

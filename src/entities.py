@@ -225,16 +225,29 @@ class Coco(arcade.Sprite):
         self.height = pymunk_shape.radius * 2
         self.pymunk_shape = pymunk_shape
 
+class FireCoco(arcade.Sprite):
+    def __init__(self, filename, pymunk_shape):
+        super().__init__(filename, center_x=pymunk_shape.body.position.x, center_y=pymunk_shape.body.position.y)
+        self.width = pymunk_shape.radius * 2
+        self.height = pymunk_shape.radius * 2
+        self.pymunk_shape = pymunk_shape
+
 
 class CocoSystem:
     def __init__(self, screen_width, screen_height, coco_x, coco_y):
         self.obstacle_list = arcade.SpriteList()
         self.coco_list: arcade.SpriteList[Coco] = arcade.SpriteList()
+        self.fire_coco_list: arcade.SpriteList[FireCoco] = arcade.SpriteList()
+
+        self.shoot_one_cocos = False
+        self.shoot_two_cocos = False
+
         # -- Pymunk
         self.space = pymunk.Space()
         self.space.gravity = (0.0, -900.0)
-        self.static_lines = []
-        self.ticks_to_next_ball = 10
+
+        self.isle_borders = []
+        self.ticks_to_next_coco = 10
 
         self.screen_width = screen_width
         self.screen_height = screen_height
@@ -247,7 +260,7 @@ class CocoSystem:
                                [screen_width/2-190, screen_height/2-100], 0.0)
         shape.friction = 10
         self.space.add(shape)
-        self.static_lines.append(shape)
+        self.isle_borders.append(shape)
 
         # Flat side of island
         body = pymunk.Body(body_type=pymunk.Body.STATIC)
@@ -255,23 +268,25 @@ class CocoSystem:
                                [screen_width/2+195, screen_height/2-95], 0.0)
         shape.friction = 10
         self.space.add(shape)
-        self.static_lines.append(shape)
+        self.isle_borders.append(shape)
 
         # Right side of island
         body = pymunk.Body(body_type=pymunk.Body.STATIC)
         shape = pymunk.Segment(body, [screen_width/2+190, screen_height/2-100], [screen_width/2+270, screen_height/2-190], 0.0)
         shape.friction = 10
         self.space.add(shape)
-        self.static_lines.append(shape)
+        self.isle_borders.append(shape)
 
     def on_draw(self):
         self.coco_list.draw()
+        self.fire_coco_list.draw()
 
     def on_update(self, player_list):
         player = player_list
-        self.ticks_to_next_ball -= 1
-        if self.ticks_to_next_ball <= 0:
-            self.ticks_to_next_ball = 100
+        # Getting cocos from tree:
+        self.ticks_to_next_coco -= 1
+        if self.ticks_to_next_coco <= 0:
+            self.ticks_to_next_coco = 100
             mass = 3.0
             radius = 15
             inertia = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
@@ -293,6 +308,16 @@ class CocoSystem:
                 self.space.remove(coco.pymunk_shape, coco.pymunk_shape.body)
                 # Remove balls from physics list
                 coco.remove_from_sprite_lists()
+        for coco in self.fire_coco_list:
+            if coco.pymunk_shape.body.position.y < self.screen_height/2-180:
+                self.space.remove(coco.pymunk_shape, coco.pymunk_shape.body)
+                coco.remove_from_sprite_lists()
+            elif coco.pymunk_shape.body.position.x > self.screen_width+10:
+                self.space.remove(coco.pymunk_shape, coco.pymunk_shape.body)
+                coco.remove_from_sprite_lists()
+            elif coco.pymunk_shape.body.position.x < -10:
+                self.space.remove(coco.pymunk_shape, coco.pymunk_shape.body)
+                coco.remove_from_sprite_lists()
 
         # Grab cocos by player:
         for coco in self.coco_list:
@@ -313,6 +338,30 @@ class CocoSystem:
 
         # Move sprites to where physics objects are
         for coco in self.coco_list:
+            coco.center_x = coco.pymunk_shape.body.position.x
+            coco.center_y = coco.pymunk_shape.body.position.y
+            coco.angle = math.degrees(coco.pymunk_shape.body.angle)
+
+        if self.shoot_one_cocos:
+            mass = 200
+            radius = 15
+            moment = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
+            body = pymunk.Body(mass, moment)
+            # Lets make a coco fall from tree:
+            x = player.sprite_list[0].center_x
+            y = player.sprite_list[0].center_y
+            body.position = x, y
+            shape = pymunk.Circle(body, radius, pymunk.Vec2d(0, 0))
+            shape.friction = 0.3
+            self.space.add(body, shape)
+            f = 100000
+            body.apply_impulse_at_local_point((f, 0), (0, 0))
+            sprite = Coco(filename=assets.coco_filename, pymunk_shape=shape)
+            self.fire_coco_list.append(sprite)
+            self.shoot_one_cocos = False
+
+        # Move sprites to where physics objects are
+        for coco in self.fire_coco_list:
             coco.center_x = coco.pymunk_shape.body.position.x
             coco.center_y = coco.pymunk_shape.body.position.y
             coco.angle = math.degrees(coco.pymunk_shape.body.angle)

@@ -3,3 +3,4 @@ pathlib == 1.0.1
 semidbm == 0.5.1
 numpy == 1.19.2
 pymunk
+pyglet
