@@ -10,6 +10,24 @@ import random
 import math
 
 intro_team = assets.intro_authors
+game_title_orange = assets.game_title_orange
+game_title_blue = assets.game_title_blue
+
+
+def draw_title(color, window):
+    if color == 'orange':
+        arcade.draw_lrwh_rectangle_textured(window.width / 2 - game_title_orange.width / 2,
+                                            window.height * 4 / 5,
+                                            game_title_orange.width,
+                                            game_title_orange.height,
+                                            game_title_orange)
+    else:
+        arcade.draw_lrwh_rectangle_textured(window.width / 2 - game_title_blue.width / 2,
+                                            window.height * 4 / 5,
+                                            game_title_blue.width,
+                                            game_title_blue.height,
+                                            game_title_blue)
+
 
 
 class Entity(arcade.SpriteList):
@@ -230,6 +248,7 @@ class Coco(arcade.Sprite):
         self.width = pymunk_shape.radius * 2
         self.height = pymunk_shape.radius * 2
         self.pymunk_shape = pymunk_shape
+
 
 class FireCoco(arcade.Sprite):
     def __init__(self, filename, pymunk_shape):
@@ -505,8 +524,9 @@ class DynamicBackground(Entity):
 class Button(Entity):
     # EVERYTHING IS FREAKING BUTTON IN THIS GAME
     def __init__(self, width=200, height=200, x=200, y=200,
-                 texture_idle=assets.button_idle, texture_hover=assets.button_hover):
+                 texture_idle=assets.button_idle, texture_hover=assets.button_hover, slot=0):
         super().__init__()
+        self.slot = slot
         self.x = x
         self.y = y
         self.width = width

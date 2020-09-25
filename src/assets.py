@@ -11,6 +11,12 @@ UNIT_SCALING = 1
 def path_to_string(directory, file):
     return str(Path.cwd().joinpath(directory, file).resolve())
 
+
+# TITLE
+game_title_orange = arcade.load_texture(path_to_string('gfx', 'bg_title1.png'))
+game_title_blue = arcade.load_texture(path_to_string('gfx', 'bg_title2.png'))
+
+
 # INTRO
 intro_authors = arcade.load_texture(path_to_string('gfx', 'intro_team_white.png'))
 
@@ -20,6 +26,10 @@ player_cursor_hover = arcade.Sprite(path_to_string('gfx', 'cursor_hover.png'), U
 player_cursor_select = arcade.Sprite(path_to_string('gfx', 'cursor_select.png'), UI_SCALING)
 
 # UI BUTTONS
+button_save_idle = arcade.Sprite(path_to_string('gfx', 'ui_button_save.png'), UI_SCALING)
+button_save_hover = arcade.Sprite(path_to_string('gfx', 'ui_button_save_hover.png'), UI_SCALING)
+button_wave_idle = arcade.Sprite(path_to_string('gfx', 'ui_button_wave.png'), UI_SCALING)
+button_wave_hover = arcade.Sprite(path_to_string('gfx', 'ui_button_wave_hover.png'), UI_SCALING)
 button_idle = arcade.Sprite(path_to_string('gfx', 'ui_button.png'), UI_SCALING)
 button_hover = arcade.Sprite(path_to_string('gfx', 'ui_button_hover.png'), UI_SCALING)
 button_start_idle = arcade.Sprite(path_to_string('gfx', 'ui_button_start.png'), UI_SCALING)
@@ -66,7 +76,11 @@ button_textures = {"start": button_start_idle,
                    "restart3": button_restart3_idle,
                    "restart3_hover": button_restart3_hover,
                    "menu": button_menu_idle,
-                   "menu_hover": button_menu_hover
+                   "menu_hover": button_menu_hover,
+                   "wave": button_wave_idle,
+                   "wave_hover": button_wave_hover,
+                   "save": button_save_idle,
+                   "save_hover": button_save_hover
 }
 
 # BACKGROUND
