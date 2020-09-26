@@ -107,12 +107,14 @@ sea = arcade.load_texture(path_to_string('gfx', 'bg_see.png'))
 hero_bottom_idle = []
 hero_bottom_run = []
 hero_bottom_throw = []
+hero_bottom_build = []
 hero_top_idle = []
 hero_top_run = []
 hero_top_throw = []
+hero_top_build = []
 hero_die = []
-hero_top = (hero_top_idle, hero_top_run, hero_top_throw)
-hero_bottom = (hero_bottom_idle, hero_bottom_run, hero_bottom_throw)
+hero_top = (hero_top_idle, hero_top_run, hero_top_throw, hero_top_build)
+hero_bottom = (hero_bottom_idle, hero_bottom_run, hero_bottom_throw, hero_bottom_build)
 hero_all = (hero_top_idle, hero_top_run, hero_top_throw, hero_bottom_idle, hero_bottom_run, hero_bottom_throw)
 
 # Blue Fish
@@ -146,6 +148,16 @@ for x in range(1,5,1):
                                              flipped_horizontally=True)
     hero_top_run.append((_hero_top_run, _hero_top_run_left))
 
+# Run 4 frames
+    _hero_bottom_build = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_build1.png'))
+    _hero_bottom_build_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_build1.png'),
+                                                  flipped_horizontally=True)
+    hero_bottom_build.append((_hero_bottom_run, _hero_bottom_run_left))
+    _hero_top_build = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_build1.png'))
+    _hero_top_build_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_build1.png'),
+                                               flipped_horizontally=True)
+    hero_top_build.append((_hero_top_run, _hero_top_run_left))
+
 # Throw 3 frames
 for x in range(1,4,1):
     _hero_bottom_throw = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_throw'+str(x)+'.png'))
@@ -161,6 +173,12 @@ for x in range(1,4,1):
 for x in range(1,7,1):
     _hero_die = arcade.load_texture(file_name=path_to_string('gfx', 'hero_die'+str(x)+'.png'))
     hero_die.append(_hero_die)
+
+dynamic_background_raft = []
+# RAFT 6 frames
+for x in range(1,7,1):
+    _raft = arcade.load_texture(file_name=path_to_string('gfx', 'raft'+str(x)+'.png'))
+    dynamic_background_raft.append(_raft)
 
 coco_filename = path_to_string('gfx', 'coco.png')
 coco_texture = arcade.load_texture(file_name=coco_filename)

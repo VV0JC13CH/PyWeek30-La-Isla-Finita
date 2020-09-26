@@ -29,7 +29,6 @@ def draw_title(color, window):
                                             game_title_blue)
 
 
-
 class Entity(arcade.SpriteList):
     def __init__(self):
         super().__init__()
@@ -462,11 +461,19 @@ class DynamicBackground(Entity):
         self.height = height
         self.res_width = res_width
         self.res_height = res_height
+        self.raft_completion = 0.5
         self.is_static = True
         self.sky = assets.dynamic_background_sky_by_hour
         self.sea = assets.sea
         self.frames_of_bg = assets.dynamic_background_frames
         self.frames_of_bg_leafs = assets.dynamic_background_leafs
+        self.frames_of_bg_raft = assets.dynamic_background_raft
+        self.raft = arcade.Sprite(center_x=width/2, center_y=height/2)
+        self.raft.texture = self.frames_of_bg_raft[0]
+        self.raft.center_x = self.x
+        self.raft.center_y = self.y
+        self.raft.width = self.width
+        self.raft.height = self.height
         self.leafs = arcade.Sprite(center_x=width/2, center_y=height/2)
         self.leafs.texture = self.frames_of_bg_leafs[0]
         self.leafs_frame = 0
@@ -494,10 +501,35 @@ class DynamicBackground(Entity):
     def draw_leafs(self):
         self.leafs.draw()
 
+    def draw_raft(self):
+        if self.raft_completion > 0.15:
+            self.raft.draw()
+        if self.raft_completion >= 1:
+            self.raft.texture = self.frames_of_bg_raft[5]
+        elif self.raft_completion >= 0.85:
+            self.raft.texture = self.frames_of_bg_raft[4]
+        elif self.raft_completion >= 0.70:
+            self.raft.texture = self.frames_of_bg_raft[3]
+        elif self.raft_completion >= 0.55:
+            self.raft.texture = self.frames_of_bg_raft[2]
+        elif self.raft_completion >= 0.40:
+            self.raft.texture = self.frames_of_bg_raft[1]
+        else:
+            self.raft.texture = self.frames_of_bg_raft[0]
+
+    def update_raft(self):
+        if self.raft_completion >= 1:
+            self.raft.change_x -= 1
+            self.raft.change_y -= 1
+        elif self.raft_completion == 0:
+            self.raft.center_x = self.width / 2
+            self.raft.center_y = self.height / 2
+
     def on_draw(self):
         self.draw_sea_and_sky()
         self.draw()
         self.draw_leafs()
+        self.draw_raft()
 
     def change_frame(self, frame):
         self.sprite_list.clear()
@@ -505,6 +537,7 @@ class DynamicBackground(Entity):
         self.leafs.texture = self.frames_of_bg_leafs[frame]
 
     def on_update(self, delta_time: float = 1/60):
+        self.update_raft()
         if self.current_frame < 5.9:
             self.frame += self.speed_of_Frames
             self.current_frame += self.speed_of_Frames

@@ -262,6 +262,7 @@ class GameView(arcade.View):
         self.background.draw()
         self.coco_system.on_draw()
         self.background.draw_leafs()
+        self.background.draw_raft()
 
         self.hero.draw()
         self.hero.on_draw_cocos()
