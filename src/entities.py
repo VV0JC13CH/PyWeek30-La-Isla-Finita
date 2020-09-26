@@ -29,11 +29,74 @@ def draw_title(color, window):
                                             game_title_blue)
 
 
+class Bird(arcade.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.speed = 0.5
+        self.current_frame = 0
+        self.texture = assets.white_bird[self.current_frame][0]
+        self.speed_of_Frames = 0.25
+        self.animated_textures = assets.white_bird
+        self.facing_left = True
+
+    def follow_hero(self, hero_sprite):
+        self.center_x += self.change_x
+        self.center_y += self.change_y
+
+        # Random 1 in 100 chance that we'll change from our old direction and
+        # then re-aim toward the player
+        if random.randrange(100) == 0:
+            start_x = self.center_x
+            start_y = self.center_y
+
+            # Get the destination location for the bullet
+            destination_x = hero_sprite.center_x
+            destination_y = hero_sprite.center_y
+            if hero_sprite.center_x < self.center_x:
+                self.facing_left = True
+            else:
+                self.facing_left = False
+
+            # Do math to calculate how to get the bullet to the destination.
+            # Calculation the angle in radians between the start points
+            # and end points. This is the angle the bullet will travel.
+            x_diff = destination_x - start_x
+            y_diff = destination_y - start_y
+            angle = math.atan2(y_diff, x_diff)
+
+            # Taking into account the angle, calculate our change_x
+            # and change_y. Velocity is how fast the bullet travels.
+            self.change_x = math.cos(angle) * self.speed
+            self.change_y = math.sin(angle) * self.speed
+
+    def on_update(self):
+        if self.facing_left:
+            left = 0
+        else:
+            left = 1
+        if self.current_frame <= 4:
+            self.current_frame += self.speed_of_Frames
+            self.texture = self.animated_textures[int(self.current_frame)][left]
+        else:
+            self.current_frame = 0
+            self.texture = self.animated_textures[0][left]
+
+
+def spawn_birds(wave, bird_list, screen_width, screen_height):
+    if len(bird_list) <= wave:
+        for i in range(wave+1):
+            bird = Bird()
+            # Position the bird
+            bird.center_x = random.randrange(-screen_width, screen_width*2)
+            bird.center_y = random.randrange(screen_height, screen_height*2)
+
+            # Add the coin to the lists
+            bird_list.append(bird)
+
 
 class Entity(arcade.SpriteList):
     def __init__(self):
         super().__init__()
-
 
 class Hero(arcade.SpriteList):
     def __init__(self, start_x, start_y):
@@ -42,9 +105,11 @@ class Hero(arcade.SpriteList):
         self.hero_bottom_idle = assets.hero_bottom_idle
         self.hero_bottom_run = assets.hero_bottom_run
         self.hero_bottom_throw = assets.hero_bottom_throw
+        self.hero_bottom_build = assets.hero_bottom_build
         self.hero_top_idle = assets.hero_top_idle
         self.hero_top_run = assets.hero_top_run
         self.hero_top_throw = assets.hero_top_throw
+        self.hero_top_build = assets.hero_top_build
         self.hero_die = assets.hero_die
         self.hero_all = assets.hero_all
         self.hero_top_textures = assets.hero_top
@@ -84,9 +149,19 @@ class Hero(arcade.SpriteList):
         self.updates_per_frame_idle = 40
         self.updates_per_frame_throw = 16
         self.updates_per_frame_die = 14
+        # Keys
+        self.key_left_pressed = False
+        self.key_right_pressed = False
+        self.key_up_pressed = False
+        self.key_down_pressed = False
+
         # Position/Motion:
         self.center_x = start_x
         self.center_y = start_y
+        self.history_x = start_x
+        self.history_y = start_y
+        self.history_has_coco_left = False
+        self.history_has_coco_right = False
         for sprite in self.sprite_list:
             sprite.center_x = self.center_x
             sprite.center_y = self.center_y
@@ -106,7 +181,7 @@ class Hero(arcade.SpriteList):
         self.throw_at_y = 0
         self.angle = 0
 
-    def change_position(self, dx, dy):
+    def _change_position(self, dx, dy):
         if not self.dying:
             for sprite in self:
                 sprite.change_x = dx*self.movement_speed
@@ -123,6 +198,47 @@ class Hero(arcade.SpriteList):
             self.sprite_top_coco_left.change_y = 0
             self.sprite_top_coco_right.change_x = 0
             self.sprite_top_coco_right.change_y = 0
+
+    def change_position(self, island_width, island_height):
+        self.change_x = 0
+        if not self.dying and not self.current_state == 'build':
+            if island_width * 0.30 < self.sprite_list[0].center_x and self.key_left_pressed and not self.key_right_pressed:
+                self.change_x = -self.movement_speed
+                self.change_state('run')
+            elif self.sprite_list[0].center_x < island_width * 0.84 and self.key_right_pressed and not self.key_left_pressed:
+                self.change_x = self.movement_speed
+                self.change_state('run')
+            elif self.key_down_pressed and not self.key_up_pressed:
+                self.change_state('build')
+                self.history_x = self.sprite_list[0].center_x
+                self.history_y = self.sprite_list[0].center_y
+                self.history_has_coco_left = self.has_coco_left
+                self.history_has_coco_right = self.has_coco_right
+                self.has_coco_left = False
+                self.has_coco_right = False
+                for sprite in self:
+                    sprite.change_x = 0
+                    sprite.change_y = 0
+                    sprite.center_x = island_width / 2
+                    sprite.center_y = island_height * 0.7
+            elif not self.key_left_pressed and not self.key_right_pressed:
+                self.change_x = 0
+                self.change_state(state='idle')
+        elif self.key_up_pressed and not self.key_down_pressed and self.current_state == 'build':
+            self.change_state('idle')
+            self.has_coco_left = self.history_has_coco_left
+            self.has_coco_right = self.history_has_coco_right
+            for sprite in self:
+                sprite.center_x = self.history_x
+                sprite.center_y = self.history_y
+            self.center_x = self.history_x
+            self.center_y = self.history_y
+            self.sprite_top_coco_left.center_x = self.history_x
+            self.sprite_top_coco_left.center_y = self.history_y
+            self.sprite_top_coco_right.center_x = self.history_x
+            self.sprite_top_coco_right.center_y = self.history_y
+
+        self._change_position(self.change_x, self.change_y)
 
     def on_draw_cocos(self):
         if self.has_coco_left_took:
@@ -155,7 +271,22 @@ class Hero(arcade.SpriteList):
             left = 1
         else:
             left = 0
-        if self.current_state == 'run':
+        if self.current_state == 'die':
+            self.dying = True
+            if not self.died:
+                self.current_frame_die += 1
+                self.sprite_bottom.angle -= 1
+                if self.current_frame_die >= 6 * self.updates_per_frame_die:
+                    self.current_frame_die = 0
+                    self.died = True
+                self.sprite_top.remove_from_sprite_lists()
+                self.sprite_bottom.texture = self.hero_die[self.current_frame_die // self.updates_per_frame_die]
+            else:
+                self.sprite_bottom.texture = self.hero_die[5]
+        elif self.current_state == 'build':
+            self.sprite_top.texture = self.hero_top_build[0][left]
+            self.sprite_bottom.texture = self.hero_bottom_build[0][left]
+        elif self.current_state == 'run':
             if not self.dying:
                 self.current_frame_run += 1
                 if self.current_frame_run >= 4 * self.updates_per_frame_run:
@@ -177,19 +308,6 @@ class Hero(arcade.SpriteList):
                     self.current_frame_idle = 0
                 self.sprite_top.texture = self.hero_top_idle[self.current_frame_idle // self.updates_per_frame_idle][left]
                 self.sprite_bottom.texture = self.hero_bottom_idle[self.current_frame_idle // self.updates_per_frame_idle][left]
-        elif self.current_state == 'die':
-            self.dying = True
-            if not self.died:
-                self.current_frame_die += 1
-                self.sprite_bottom.angle -= 1
-                if self.current_frame_die >= 6 * self.updates_per_frame_die:
-                    self.current_frame_die = 0
-                    self.died = True
-                self.sprite_top.remove_from_sprite_lists()
-                self.sprite_bottom.texture = self.hero_die[self.current_frame_die // self.updates_per_frame_die]
-            else:
-                self.sprite_bottom.texture = self.hero_die[5]
-
 
     def flip_horizontaly(self, mouse_x):
         if mouse_x < self.center_x:
@@ -219,27 +337,27 @@ class Hero(arcade.SpriteList):
         """
         Called whenever a key is pressed.
         """
-        if not self.dying:
-            if key == arcade.key.A:
-                self.change_x = -self.movement_speed
-                self.change_state('run')
-            elif key == arcade.key.D:
-                self.change_x = self.movement_speed
-                self.change_state('run')
-            self.change_position(self.change_x, self.change_y)
+        if key == arcade.key.A or key == arcade.key.LEFT:
+            self.key_left_pressed = True
+        elif key == arcade.key.D or key == arcade.key.RIGHT:
+            self.key_right_pressed = True
+        elif key == arcade.key.W or key == arcade.key.UP:
+            self.key_up_pressed = True
+        elif key == arcade.key.S or key == arcade.key.DOWN:
+            self.key_down_pressed = True
 
     def on_key_release(self, key):
         """
         Called when the user releases a key.
         """
-        if not self.dying:
-            if key == arcade.key.W or key == arcade.key.S:
-                self.change_y = 0
-                self.change_state(state='idle')
-            elif key == arcade.key.A or key == arcade.key.D:
-                self.change_x = 0
-                self.change_state(state='idle')
-            self.change_position(self.change_x, self.change_y)
+        if key == arcade.key.A or key == arcade.key.LEFT:
+            self.key_left_pressed = False
+        elif key == arcade.key.D or key == arcade.key.RIGHT:
+            self.key_right_pressed = False
+        elif key == arcade.key.W or key == arcade.key.UP:
+            self.key_up_pressed = False
+        elif key == arcade.key.S or key == arcade.key.DOWN:
+            self.key_down_pressed = False
 
 
 class Coco(arcade.Sprite):
@@ -454,7 +572,7 @@ class Cursor(arcade.SpriteList):
 
 class DynamicBackground(Entity):
     # DOES NOTHING MEANS EVERYTHING
-    def __init__(self, res_width, res_height, width=800, height=600, x=400, y=300):
+    def __init__(self, res_width, res_height, width=800, height=600, x=400, y=300, game_hour=14):
         super().__init__()
         self.x = x
         self.y = y
@@ -462,11 +580,19 @@ class DynamicBackground(Entity):
         self.height = height
         self.res_width = res_width
         self.res_height = res_height
+        self.raft_completion = 0.0
         self.is_static = True
         self.sky = assets.dynamic_background_sky_by_hour
         self.sea = assets.sea
         self.frames_of_bg = assets.dynamic_background_frames
         self.frames_of_bg_leafs = assets.dynamic_background_leafs
+        self.frames_of_bg_raft = assets.dynamic_background_raft
+        self.raft = arcade.Sprite(center_x=width/2, center_y=height/2)
+        self.raft.texture = self.frames_of_bg_raft[0]
+        self.raft.center_x = self.x
+        self.raft.center_y = self.y
+        self.raft.width = self.width
+        self.raft.height = self.height
         self.leafs = arcade.Sprite(center_x=width/2, center_y=height/2)
         self.leafs.texture = self.frames_of_bg_leafs[0]
         self.leafs_frame = 0
@@ -476,7 +602,8 @@ class DynamicBackground(Entity):
         self.leafs.height = self.height
         self.frame = 0
         self.previous_delta = 0
-        self.game_hour = 14
+        self.game_hour = game_hour
+        self.victory = False
         self.current_frame = 0
         self.speed_of_Frames = 0.09
         self.append(self.frames_of_bg[0])
@@ -494,10 +621,38 @@ class DynamicBackground(Entity):
     def draw_leafs(self):
         self.leafs.draw()
 
+    def building_raft(self, current_state, speed):
+        if self.raft_completion >= 1:
+            self.victory = True
+        elif current_state == 'build' and self.raft_completion < 1.0:
+            self.raft_completion += speed
+
+    def draw_raft(self):
+        if self.raft_completion > 0.05:
+            self.raft.draw()
+        if self.raft_completion >= 1:
+            self.raft.texture = self.frames_of_bg_raft[5]
+        elif self.raft_completion >= 0.85:
+            self.raft.texture = self.frames_of_bg_raft[4]
+        elif self.raft_completion >= 0.70:
+            self.raft.texture = self.frames_of_bg_raft[3]
+        elif self.raft_completion >= 0.55:
+            self.raft.texture = self.frames_of_bg_raft[2]
+        elif self.raft_completion >= 0.40:
+            self.raft.texture = self.frames_of_bg_raft[1]
+        else:
+            self.raft.texture = self.frames_of_bg_raft[0]
+
+    def update_raft(self):
+        if self.raft_completion >= 1:
+            self.raft.change_x = -1
+            self.raft.change_y = -1
+
     def on_draw(self):
         self.draw_sea_and_sky()
         self.draw()
         self.draw_leafs()
+        self.draw_raft()
 
     def change_frame(self, frame):
         self.sprite_list.clear()
@@ -505,6 +660,8 @@ class DynamicBackground(Entity):
         self.leafs.texture = self.frames_of_bg_leafs[frame]
 
     def on_update(self, delta_time: float = 1/60):
+        self.update_raft()
+        self.raft.update()
         if self.current_frame < 5.9:
             self.frame += self.speed_of_Frames
             self.current_frame += self.speed_of_Frames
@@ -573,7 +730,6 @@ class MusicManager:
         self.current_song += 1
         if self.current_song >= len(self.music_list):
             self.current_song = 0
-        print(f"Advancing song to {self.current_song}.")
 
     def play_song(self):
         """ Play the song. """
@@ -582,12 +738,8 @@ class MusicManager:
             self.music.stop()
 
         # Play the next song
-        print(f"Playing {self.music_list[self.current_song]}")
         self.music = arcade.Sound(self.music_list[self.current_song], streaming=True)
         self.music.play(self.volume)
-        # This is a quick delay. If we don't do this, our elapsed time is 0.0
-        # and on_update will think the music is over and advance us to the next
-        # song before starting this one.
         time.sleep(0.03)
 
     def setup(self):
