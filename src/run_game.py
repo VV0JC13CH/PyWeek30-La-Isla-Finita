@@ -210,6 +210,7 @@ class GameView(arcade.View):
         self.hero_action = 'idle'
         self.wait_after_failure = False
         self.game_over = False
+        self.wait_sec = 0
 
         # Developer mode
         self.developer_mode = SET_DEVELOPER
@@ -254,6 +255,20 @@ class GameView(arcade.View):
                                        slot=self.slot,
                                        sun_time=self.sun_time)
         self.window.show_view(restart_stage_view)
+
+    def instruction(self):
+        if int(self.wait_sec) in range(2,30):
+            arcade.draw_text("PRESS W,D to move", self.window.width/2,
+                             self.window.height-60,
+                             DEFAULT_FONT, font_size=20, anchor_x="center")
+        if int(self.wait_sec) in range(5, 30):
+            arcade.draw_text("Use mouse to shoot cocos at seagulls", self.window.width/2,
+                             self.window.height-120,
+                             DEFAULT_FONT, font_size=20, anchor_x="center")
+        if int(self.wait_sec) in range(7, 30):
+            arcade.draw_text("Press S to start or W to stop building raft", self.window.width/2,
+                             self.window.height-180,
+                             DEFAULT_FONT, font_size=20, anchor_x="center")
 
     def developer_mode_pre_render(self):
         if self.developer_mode:
@@ -303,6 +318,8 @@ class GameView(arcade.View):
         self.hero.draw()
         self.hero.on_draw_cocos()
         self.bird_list.draw()
+        if self.stage == 1:
+            self.instruction()
 
         if self.developer_mode:
             self.developer_mode_post_render()
@@ -317,6 +334,8 @@ class GameView(arcade.View):
         self.hero.sprite_top_coco_left.update()
         self.background.building_raft(self.hero.current_state, 0.001)
         self.coco_system.on_update(player_list=self.hero)
+
+        self.wait_sec += delta_time
 
         # Birds:
         self.bird_list.update()
