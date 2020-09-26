@@ -9,7 +9,7 @@ Game uses arcade python library as a core. I used pathlib to make game cross-pla
 Numpy to calculate degree between horizon and mouse coordinates. Pymunk for cocos physic.
 Checkout requirements.txt for details.
 
-###How to build and run your game
+### How to build and run your game
 Simply just fulfill requirements by
 ```
 pip install -r requirements.txt
@@ -23,7 +23,7 @@ To change screen resolution or sound settings, go to:
 data/settings.ini
 ```
 
-###The controls
+### The controls
 A(LEFT) - LEFT \
 D(RIGHT) - RIGHT \
 W(UP) - GO TO ISLAND \
@@ -32,12 +32,12 @@ MOUSE - AIM AND SHOOT
 
 *alternative keys in brackets
 
-###What there is to see in the game
+### What there is to see in the game
 For now it's just a simple-enemy, simple-goal game. You have to build a rift, but seagulls don't
 like our player. I hope I will add more enemies and fix few things after pyWeek. I had real good
 time during this week.
 
-###Copyright attributions (eg. CC-BY resources you have used)
+### Copyright attributions (eg. CC-BY resources you have used)
 I included all sources of external media into credits.txt files. I used:
 ```
 Files: ui_button_png, ui_button_hover.png
