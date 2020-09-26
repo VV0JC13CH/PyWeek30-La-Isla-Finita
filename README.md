@@ -33,7 +33,7 @@ MOUSE - AIM AND SHOOT
 *alternative keys in brackets
 
 ### What there is to see in the game
-For now it's just a simple-enemy, simple-goal game. You have to build a rift, but seagulls don't
+For now it's just a single-enemy, simple-goal game. You have to build a rift, but seagulls don't
 like our player. I hope I will add more enemies and fix few things after pyWeek. I had real good
 time during this week.
 
