@@ -1,5 +1,7 @@
 # PyWeek30-La-Isla-Finita
 PyWeek30 competition entry. 
+![LaIslaFinita](gameplay.gif)
+
 
 ### What dependencies your game requires to run
 Game uses arcade python library as a core. I used pathlib to make game cross-platform.
