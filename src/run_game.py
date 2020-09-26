@@ -187,7 +187,7 @@ class StageView(arcade.View):
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
         if self.button_exit.current_state == 'hover':
-            self.window.has_exit()
+            self.window.close()
         if self.button_wave.current_state == 'hover':
             game_view = GameView(background=self.background, wave=self.wave, slot=self.slot, sun_time=self.sun_time)
             self.window.show_view(game_view)
@@ -199,7 +199,7 @@ class GameView(arcade.View):
         # Environment
         self.background = background
         self.time_taken = 0
-        self.sun_time = 840
+        self.sun_time = sun_time
         # Gameplay
         self.stage = wave
         self.slot = slot
@@ -208,6 +208,8 @@ class GameView(arcade.View):
         # Hero
         self.hero = entities.Hero(self.window.width/2, self.window.height*0.42)
         self.hero_action = 'idle'
+        self.wait_after_failure = False
+        self.game_over = False
 
         # Developer mode
         self.developer_mode = SET_DEVELOPER
@@ -217,6 +219,11 @@ class GameView(arcade.View):
         self.frame_count = 0
         self.fps_start_timer = None
         self.fps = None
+
+        # Enemies:
+        self.score = 0
+        self.bird_list = []
+        self.bird_list = arcade.SpriteList()
 
         # Physic system
         self.coco_system = entities.CocoSystem(screen_width=self.window.width, screen_height=self.window.height,
@@ -232,8 +239,21 @@ class GameView(arcade.View):
                                                                           game_hour=game_hour),
                                     wave=next_stage,
                                     slot=self.slot,
-                                    sun_time=self.sun_time // 60)
+                                    sun_time=self.sun_time)
         self.window.show_view(next_stage_view)
+
+    def on_failure(self):
+        next_stage = self.stage
+        game_hour = (int(self.sun_time) // 60) % 24
+        restart_stage_view = StageView(background=entities.DynamicBackground(x=self.window.width/2,
+                                                                             y=self.window.height/2,
+                                                                             res_width=self.window.width,
+                                                                             res_height=self.window.height,
+                                                                             game_hour=game_hour),
+                                       wave=next_stage,
+                                       slot=self.slot,
+                                       sun_time=self.sun_time)
+        self.window.show_view(restart_stage_view)
 
     def developer_mode_pre_render(self):
         if self.developer_mode:
@@ -280,12 +300,9 @@ class GameView(arcade.View):
         self.coco_system.on_draw()
         self.background.draw_leafs()
         self.background.draw_raft()
-        if self.hero.current_state == 'build':
-            raft_completion = f"{int(self.background.raft_completion*100)}"
-            arcade.draw_text(raft_completion, 20, self.window.height - 80, arcade.color.BLACK, 16)
-
         self.hero.draw()
         self.hero.on_draw_cocos()
+        self.bird_list.draw()
 
         if self.developer_mode:
             self.developer_mode_post_render()
@@ -299,15 +316,45 @@ class GameView(arcade.View):
         self.hero.sprite_top_coco_right.update()
         self.hero.sprite_top_coco_left.update()
         self.background.building_raft(self.hero.current_state, 0.001)
-
         self.coco_system.on_update(player_list=self.hero)
+
+        # Birds:
+        self.bird_list.update()
+        for bird in self.bird_list:
+            bird.on_update()
+            bird.follow_hero(self.hero[0])
+        birds_hit_list_1 = arcade.check_for_collision_with_list(self.hero[0], self.bird_list)
+
+        entities.spawn_birds(wave=self.stage, bird_list=self.bird_list, screen_width=self.window.width,
+                             screen_height=self.window.height)
+
         self.background.on_update()
         self.background.update_hour(int(self.sun_time) // 60)
 
+        # Victory
         if self.background.victory:
             self.wait_after_victory += delta_time
             if self.wait_after_victory >= 2:
                 self.on_victory()
+        # Game over
+        for bird in birds_hit_list_1:
+            bird.kill()
+        for coco in self.coco_system.fire_coco_list:
+            coco_hit_list = arcade.check_for_collision_with_list(coco, self.bird_list)
+            for cocos in coco_hit_list:
+                cocos.kill()
+            for bird in self.bird_list:
+                bird_hit_list = arcade.check_for_collision_with_list(bird, self.coco_system.fire_coco_list)
+                for bird in bird_hit_list:
+                    bird.kill()
+
+        if len(birds_hit_list_1) >= 1:
+            self.game_over = True
+        if self.game_over:
+            self.wait_after_failure += delta_time
+            self.hero.change_state(state='die')
+            if self.wait_after_failure >= 1:
+                self.on_failure()
 
     def on_mouse_motion(self, x: float, y: float, dx: float, dy: float):
 
@@ -386,31 +433,6 @@ class PauseView(arcade.View):
             self.window.show_view(menu_view)
         if self.button_exit.current_state == 'hover':
             self.window.close()
-
-
-class GameOverView(arcade.View):
-    def __init__(self, background):
-        super().__init__()
-        self.background = background
-        self.time_taken = 0
-
-    def on_draw(self):
-        arcade.start_render()
-
-        arcade.draw_text("Game Over", 240, 400, DEFAULT_FONT, 54)
-        arcade.draw_text("Click to restart", 310, 300, DEFAULT_FONT, 24)
-
-        time_taken_formatted = f"{round(self.time_taken, 2)} seconds"
-        arcade.draw_text(f"Time taken: {time_taken_formatted}",
-                         self.window.width / 2,
-                         200,
-                         DEFAULT_FONT,
-                         font_size=15,
-                         anchor_x="center")
-
-    def on_mouse_press(self, _x, _y, _button, _modifiers):
-        game_view = GameView()
-        self.window.show_view(game_view)
 
 
 class Island(arcade.Window):

@@ -123,6 +123,15 @@ for x in range(1,5,1):
     blue_fish_texture = arcade.load_texture(path_to_string('gfx', 'blue_fish'+str(x)+'.png'))
     blue_fish.append(blue_fish_texture)
 
+# White Bird
+white_bird = []
+white_bird_filename = path_to_string('gfx', 'bird'+str(x)+'.png')
+for x in range(1,7,1):
+    white_bird_texture = arcade.load_texture(path_to_string('gfx', 'bird'+str(x)+'.png'))
+    white_bird_texture_right = arcade.load_texture(path_to_string('gfx', 'bird'+str(x)+'.png'),
+                                                   flipped_horizontally=True)
+    white_bird.append((white_bird_texture, white_bird_texture_right))
+
 # Idle 2 frames
 for x in range(1,3,1):
     _hero_bottom_idle = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_idle'+str(x)+'.png'))

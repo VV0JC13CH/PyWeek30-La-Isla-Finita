@@ -14,8 +14,6 @@ game_title_orange = assets.game_title_orange
 game_title_blue = assets.game_title_blue
 
 
-
-
 def draw_title(color, window):
     if color == 'orange':
         arcade.draw_lrwh_rectangle_textured(window.width / 2 - game_title_orange.width / 2,
@@ -31,10 +29,74 @@ def draw_title(color, window):
                                             game_title_blue)
 
 
+class Bird(arcade.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.speed = 0.5
+        self.current_frame = 0
+        self.texture = assets.white_bird[self.current_frame][0]
+        self.speed_of_Frames = 0.25
+        self.animated_textures = assets.white_bird
+        self.facing_left = True
+
+    def follow_hero(self, hero_sprite):
+        self.center_x += self.change_x
+        self.center_y += self.change_y
+
+        # Random 1 in 100 chance that we'll change from our old direction and
+        # then re-aim toward the player
+        if random.randrange(100) == 0:
+            start_x = self.center_x
+            start_y = self.center_y
+
+            # Get the destination location for the bullet
+            destination_x = hero_sprite.center_x
+            destination_y = hero_sprite.center_y
+            if hero_sprite.center_x < self.center_x:
+                self.facing_left = True
+            else:
+                self.facing_left = False
+
+            # Do math to calculate how to get the bullet to the destination.
+            # Calculation the angle in radians between the start points
+            # and end points. This is the angle the bullet will travel.
+            x_diff = destination_x - start_x
+            y_diff = destination_y - start_y
+            angle = math.atan2(y_diff, x_diff)
+
+            # Taking into account the angle, calculate our change_x
+            # and change_y. Velocity is how fast the bullet travels.
+            self.change_x = math.cos(angle) * self.speed
+            self.change_y = math.sin(angle) * self.speed
+
+    def on_update(self):
+        if self.facing_left:
+            left = 0
+        else:
+            left = 1
+        if self.current_frame <= 4:
+            self.current_frame += self.speed_of_Frames
+            self.texture = self.animated_textures[int(self.current_frame)][left]
+        else:
+            self.current_frame = 0
+            self.texture = self.animated_textures[0][left]
+
+
+def spawn_birds(wave, bird_list, screen_width, screen_height):
+    if len(bird_list) <= wave:
+        for i in range(wave+1):
+            bird = Bird()
+            # Position the bird
+            bird.center_x = random.randrange(-screen_width, screen_width*2)
+            bird.center_y = random.randrange(screen_height, screen_height*2)
+
+            # Add the coin to the lists
+            bird_list.append(bird)
+
+
 class Entity(arcade.SpriteList):
     def __init__(self):
         super().__init__()
-
 
 class Hero(arcade.SpriteList):
     def __init__(self, start_x, start_y):
@@ -209,7 +271,19 @@ class Hero(arcade.SpriteList):
             left = 1
         else:
             left = 0
-        if self.current_state == 'build':
+        if self.current_state == 'die':
+            self.dying = True
+            if not self.died:
+                self.current_frame_die += 1
+                self.sprite_bottom.angle -= 1
+                if self.current_frame_die >= 6 * self.updates_per_frame_die:
+                    self.current_frame_die = 0
+                    self.died = True
+                self.sprite_top.remove_from_sprite_lists()
+                self.sprite_bottom.texture = self.hero_die[self.current_frame_die // self.updates_per_frame_die]
+            else:
+                self.sprite_bottom.texture = self.hero_die[5]
+        elif self.current_state == 'build':
             self.sprite_top.texture = self.hero_top_build[0][left]
             self.sprite_bottom.texture = self.hero_bottom_build[0][left]
         elif self.current_state == 'run':
@@ -234,18 +308,6 @@ class Hero(arcade.SpriteList):
                     self.current_frame_idle = 0
                 self.sprite_top.texture = self.hero_top_idle[self.current_frame_idle // self.updates_per_frame_idle][left]
                 self.sprite_bottom.texture = self.hero_bottom_idle[self.current_frame_idle // self.updates_per_frame_idle][left]
-        elif self.current_state == 'die':
-            self.dying = True
-            if not self.died:
-                self.current_frame_die += 1
-                self.sprite_bottom.angle -= 1
-                if self.current_frame_die >= 6 * self.updates_per_frame_die:
-                    self.current_frame_die = 0
-                    self.died = True
-                self.sprite_top.remove_from_sprite_lists()
-                self.sprite_bottom.texture = self.hero_die[self.current_frame_die // self.updates_per_frame_die]
-            else:
-                self.sprite_bottom.texture = self.hero_die[5]
 
     def flip_horizontaly(self, mouse_x):
         if mouse_x < self.center_x:
@@ -668,7 +730,6 @@ class MusicManager:
         self.current_song += 1
         if self.current_song >= len(self.music_list):
             self.current_song = 0
-        print(f"Advancing song to {self.current_song}.")
 
     def play_song(self):
         """ Play the song. """
@@ -677,12 +738,8 @@ class MusicManager:
             self.music.stop()
 
         # Play the next song
-        print(f"Playing {self.music_list[self.current_song]}")
         self.music = arcade.Sound(self.music_list[self.current_song], streaming=True)
         self.music.play(self.volume)
-        # This is a quick delay. If we don't do this, our elapsed time is 0.0
-        # and on_update will think the music is over and advance us to the next
-        # song before starting this one.
         time.sleep(0.03)
 
     def setup(self):
