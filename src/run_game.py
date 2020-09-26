@@ -214,7 +214,8 @@ class GameView(arcade.View):
         self.fps_start_timer = None
         self.fps = None
 
-        #Physic system
+        # Physic system
+
         self.coco_system = entities.CocoSystem(screen_width=self.window.width, screen_height=self.window.height,
                                                coco_x=self.window.width/2, coco_y=self.window.height/2)
 
@@ -273,8 +274,8 @@ class GameView(arcade.View):
     def on_update(self, delta_time):
         self.time_taken += delta_time
         self.sun_time += delta_time
-
         self.hero.update()
+        self.hero.change_position(screen_width=self.window.width)
         self.hero.update_animation()
         self.hero.sprite_top_coco_right.update()
         self.hero.sprite_top_coco_left.update()
@@ -304,8 +305,8 @@ class GameView(arcade.View):
         if self.developer_mode:
             if key == arcade.key.L:
                 self.hero.change_state('die')
-
-        self.hero.on_key_press(key)
+        if not self.hero.dying:
+            self.hero.on_key_press(key)
 
     def on_key_release(self, key, _modifiers):
         self.hero.on_key_release(key)

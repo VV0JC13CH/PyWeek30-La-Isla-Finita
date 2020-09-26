@@ -83,6 +83,12 @@ class Hero(arcade.SpriteList):
         self.updates_per_frame_idle = 40
         self.updates_per_frame_throw = 16
         self.updates_per_frame_die = 14
+        # Keys
+        self.key_left_pressed = False
+        self.key_left_released = False
+        self.key_right_pressed = False
+        self.key_right_released = False
+
         # Position/Motion:
         self.center_x = start_x
         self.center_y = start_y
@@ -105,7 +111,7 @@ class Hero(arcade.SpriteList):
         self.throw_at_y = 0
         self.angle = 0
 
-    def change_position(self, dx, dy):
+    def _change_position(self, dx, dy):
         if not self.dying:
             for sprite in self:
                 sprite.change_x = dx*self.movement_speed
@@ -122,6 +128,20 @@ class Hero(arcade.SpriteList):
             self.sprite_top_coco_left.change_y = 0
             self.sprite_top_coco_right.change_x = 0
             self.sprite_top_coco_right.change_y = 0
+
+    def change_position(self, screen_width):
+        self.change_x = 0
+        if not self.dying:
+            if screen_width * 0.35 < self.sprite_list[0].center_x and self.key_left_pressed and not self.key_right_pressed:
+                self.change_x = -self.movement_speed
+                self.change_state('run')
+            elif self.sprite_list[0].center_x < screen_width * 0.65 and self.key_right_pressed and not self.key_left_pressed:
+                self.change_x = self.movement_speed
+                self.change_state('run')
+            elif not self.key_left_pressed and not self.key_right_pressed:
+                self.change_x = 0
+                self.change_state(state='idle')
+        self._change_position(self.change_x, self.change_y)
 
     def on_draw_cocos(self):
         if self.has_coco_left_took:
@@ -189,7 +209,6 @@ class Hero(arcade.SpriteList):
             else:
                 self.sprite_bottom.texture = self.hero_die[5]
 
-
     def flip_horizontaly(self, mouse_x):
         if mouse_x < self.center_x:
             self.facing_left = True
@@ -218,28 +237,19 @@ class Hero(arcade.SpriteList):
         """
         Called whenever a key is pressed.
         """
-        if not self.dying:
-            if key == arcade.key.A:
-                self.change_x = -self.movement_speed
-                self.change_state('run')
-            elif key == arcade.key.D:
-                self.change_x = self.movement_speed
-                self.change_state('run')
-            self.change_position(self.change_x, self.change_y)
+        if key == arcade.key.A:
+            self.key_left_pressed = True
+        elif key == arcade.key.D:
+            self.key_right_pressed = True
 
     def on_key_release(self, key):
         """
         Called when the user releases a key.
         """
-        if not self.dying:
-            if key == arcade.key.W or key == arcade.key.S:
-                self.change_y = 0
-                self.change_state(state='idle')
-            elif key == arcade.key.A or key == arcade.key.D:
-                self.change_x = 0
-                self.change_state(state='idle')
-            self.change_position(self.change_x, self.change_y)
-
+        if key == arcade.key.A:
+            self.key_left_pressed = False
+        elif key == arcade.key.D:
+            self.key_right_pressed = False
 
 class Coco(arcade.Sprite):
     def __init__(self, filename, pymunk_shape):
