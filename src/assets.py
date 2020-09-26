@@ -115,7 +115,7 @@ hero_top_build = []
 hero_die = []
 hero_top = (hero_top_idle, hero_top_run, hero_top_throw, hero_top_build)
 hero_bottom = (hero_bottom_idle, hero_bottom_run, hero_bottom_throw, hero_bottom_build)
-hero_all = (hero_top_idle, hero_top_run, hero_top_throw, hero_bottom_idle, hero_bottom_run, hero_bottom_throw)
+hero_all = (hero_top_idle, hero_top_run, hero_top_throw, hero_top_build, hero_bottom_idle, hero_bottom_run, hero_bottom_throw, hero_bottom_build)
 
 # Blue Fish
 blue_fish = []
@@ -149,14 +149,14 @@ for x in range(1,5,1):
     hero_top_run.append((_hero_top_run, _hero_top_run_left))
 
 # Run 4 frames
-    _hero_bottom_build = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_build1.png'))
-    _hero_bottom_build_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_build1.png'),
-                                                  flipped_horizontally=True)
+    _hero_bottom_build_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_build1.png'))
+    _hero_bottom_build = arcade.load_texture(file_name=path_to_string('gfx', 'hero_bottom_build1.png'),
+                                             flipped_horizontally=True)
     hero_bottom_build.append((_hero_bottom_run, _hero_bottom_run_left))
-    _hero_top_build = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_build1.png'))
-    _hero_top_build_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_build1.png'),
-                                               flipped_horizontally=True)
-    hero_top_build.append((_hero_top_run, _hero_top_run_left))
+    _hero_top_build_left = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_build1.png'))
+    _hero_top_build = arcade.load_texture(file_name=path_to_string('gfx', 'hero_top_build1.png'),
+                                          flipped_horizontally=True)
+    hero_top_build.append((_hero_top_build, _hero_top_build_left))
 
 # Throw 3 frames
 for x in range(1,4,1):

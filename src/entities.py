@@ -14,6 +14,8 @@ game_title_orange = assets.game_title_orange
 game_title_blue = assets.game_title_blue
 
 
+
+
 def draw_title(color, window):
     if color == 'orange':
         arcade.draw_lrwh_rectangle_textured(window.width / 2 - game_title_orange.width / 2,
@@ -41,9 +43,11 @@ class Hero(arcade.SpriteList):
         self.hero_bottom_idle = assets.hero_bottom_idle
         self.hero_bottom_run = assets.hero_bottom_run
         self.hero_bottom_throw = assets.hero_bottom_throw
+        self.hero_bottom_build = assets.hero_bottom_build
         self.hero_top_idle = assets.hero_top_idle
         self.hero_top_run = assets.hero_top_run
         self.hero_top_throw = assets.hero_top_throw
+        self.hero_top_build = assets.hero_top_build
         self.hero_die = assets.hero_die
         self.hero_all = assets.hero_all
         self.hero_top_textures = assets.hero_top
@@ -85,13 +89,17 @@ class Hero(arcade.SpriteList):
         self.updates_per_frame_die = 14
         # Keys
         self.key_left_pressed = False
-        self.key_left_released = False
         self.key_right_pressed = False
-        self.key_right_released = False
+        self.key_up_pressed = False
+        self.key_down_pressed = False
 
         # Position/Motion:
         self.center_x = start_x
         self.center_y = start_y
+        self.history_x = start_x
+        self.history_y = start_y
+        self.history_has_coco_left = False
+        self.history_has_coco_right = False
         for sprite in self.sprite_list:
             sprite.center_x = self.center_x
             sprite.center_y = self.center_y
@@ -129,18 +137,45 @@ class Hero(arcade.SpriteList):
             self.sprite_top_coco_right.change_x = 0
             self.sprite_top_coco_right.change_y = 0
 
-    def change_position(self, screen_width):
+    def change_position(self, island_width, island_height):
         self.change_x = 0
-        if not self.dying:
-            if screen_width * 0.35 < self.sprite_list[0].center_x and self.key_left_pressed and not self.key_right_pressed:
+        if not self.dying and not self.current_state == 'build':
+            if island_width * 0.30 < self.sprite_list[0].center_x and self.key_left_pressed and not self.key_right_pressed:
                 self.change_x = -self.movement_speed
                 self.change_state('run')
-            elif self.sprite_list[0].center_x < screen_width * 0.65 and self.key_right_pressed and not self.key_left_pressed:
+            elif self.sprite_list[0].center_x < island_width * 0.84 and self.key_right_pressed and not self.key_left_pressed:
                 self.change_x = self.movement_speed
                 self.change_state('run')
+            elif self.key_down_pressed and not self.key_up_pressed:
+                self.change_state('build')
+                self.history_x = self.sprite_list[0].center_x
+                self.history_y = self.sprite_list[0].center_y
+                self.history_has_coco_left = self.has_coco_left
+                self.history_has_coco_right = self.has_coco_right
+                self.has_coco_left = False
+                self.has_coco_right = False
+                for sprite in self:
+                    sprite.change_x = 0
+                    sprite.change_y = 0
+                    sprite.center_x = island_width / 2
+                    sprite.center_y = island_height * 0.7
             elif not self.key_left_pressed and not self.key_right_pressed:
                 self.change_x = 0
                 self.change_state(state='idle')
+        elif self.key_up_pressed and not self.key_down_pressed and self.current_state == 'build':
+            self.change_state('idle')
+            self.has_coco_left = self.history_has_coco_left
+            self.has_coco_right = self.history_has_coco_right
+            for sprite in self:
+                sprite.center_x = self.history_x
+                sprite.center_y = self.history_y
+            self.center_x = self.history_x
+            self.center_y = self.history_y
+            self.sprite_top_coco_left.center_x = self.history_x
+            self.sprite_top_coco_left.center_y = self.history_y
+            self.sprite_top_coco_right.center_x = self.history_x
+            self.sprite_top_coco_right.center_y = self.history_y
+
         self._change_position(self.change_x, self.change_y)
 
     def on_draw_cocos(self):
@@ -174,7 +209,10 @@ class Hero(arcade.SpriteList):
             left = 1
         else:
             left = 0
-        if self.current_state == 'run':
+        if self.current_state == 'build':
+            self.sprite_top.texture = self.hero_top_build[0][left]
+            self.sprite_bottom.texture = self.hero_bottom_build[0][left]
+        elif self.current_state == 'run':
             if not self.dying:
                 self.current_frame_run += 1
                 if self.current_frame_run >= 4 * self.updates_per_frame_run:
@@ -237,19 +275,28 @@ class Hero(arcade.SpriteList):
         """
         Called whenever a key is pressed.
         """
-        if key == arcade.key.A:
+        if key == arcade.key.A or key == arcade.key.LEFT:
             self.key_left_pressed = True
-        elif key == arcade.key.D:
+        elif key == arcade.key.D or key == arcade.key.RIGHT:
             self.key_right_pressed = True
+        elif key == arcade.key.W or key == arcade.key.UP:
+            self.key_up_pressed = True
+        elif key == arcade.key.S or key == arcade.key.DOWN:
+            self.key_down_pressed = True
 
     def on_key_release(self, key):
         """
         Called when the user releases a key.
         """
-        if key == arcade.key.A:
+        if key == arcade.key.A or key == arcade.key.LEFT:
             self.key_left_pressed = False
-        elif key == arcade.key.D:
+        elif key == arcade.key.D or key == arcade.key.RIGHT:
             self.key_right_pressed = False
+        elif key == arcade.key.W or key == arcade.key.UP:
+            self.key_up_pressed = False
+        elif key == arcade.key.S or key == arcade.key.DOWN:
+            self.key_down_pressed = False
+
 
 class Coco(arcade.Sprite):
     def __init__(self, filename, pymunk_shape):
@@ -463,7 +510,7 @@ class Cursor(arcade.SpriteList):
 
 class DynamicBackground(Entity):
     # DOES NOTHING MEANS EVERYTHING
-    def __init__(self, res_width, res_height, width=800, height=600, x=400, y=300):
+    def __init__(self, res_width, res_height, width=800, height=600, x=400, y=300, game_hour=14):
         super().__init__()
         self.x = x
         self.y = y
@@ -471,7 +518,7 @@ class DynamicBackground(Entity):
         self.height = height
         self.res_width = res_width
         self.res_height = res_height
-        self.raft_completion = 0.5
+        self.raft_completion = 0.0
         self.is_static = True
         self.sky = assets.dynamic_background_sky_by_hour
         self.sea = assets.sea
@@ -493,7 +540,8 @@ class DynamicBackground(Entity):
         self.leafs.height = self.height
         self.frame = 0
         self.previous_delta = 0
-        self.game_hour = 14
+        self.game_hour = game_hour
+        self.victory = False
         self.current_frame = 0
         self.speed_of_Frames = 0.09
         self.append(self.frames_of_bg[0])
@@ -511,8 +559,14 @@ class DynamicBackground(Entity):
     def draw_leafs(self):
         self.leafs.draw()
 
+    def building_raft(self, current_state, speed):
+        if self.raft_completion >= 1:
+            self.victory = True
+        elif current_state == 'build' and self.raft_completion < 1.0:
+            self.raft_completion += speed
+
     def draw_raft(self):
-        if self.raft_completion > 0.15:
+        if self.raft_completion > 0.05:
             self.raft.draw()
         if self.raft_completion >= 1:
             self.raft.texture = self.frames_of_bg_raft[5]
@@ -529,11 +583,8 @@ class DynamicBackground(Entity):
 
     def update_raft(self):
         if self.raft_completion >= 1:
-            self.raft.change_x -= 1
-            self.raft.change_y -= 1
-        elif self.raft_completion == 0:
-            self.raft.center_x = self.width / 2
-            self.raft.center_y = self.height / 2
+            self.raft.change_x = -1
+            self.raft.change_y = -1
 
     def on_draw(self):
         self.draw_sea_and_sky()
@@ -548,6 +599,7 @@ class DynamicBackground(Entity):
 
     def on_update(self, delta_time: float = 1/60):
         self.update_raft()
+        self.raft.update()
         if self.current_frame < 5.9:
             self.frame += self.speed_of_Frames
             self.current_frame += self.speed_of_Frames
